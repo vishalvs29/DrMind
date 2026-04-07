@@ -21,6 +21,7 @@ enum RiskLevel {
   LOW
   MEDIUM
   HIGH
+  CRITICAL
 }
 
 model User {
@@ -34,7 +35,7 @@ model User {
   updatedAt       DateTime       @updatedAt
   moodLogs        MoodLog[]
   userProgress    UserProgress[]
-  crisisLogs      CrisisLog[]
+  crisisEvents    CrisisEvent[]
   riskScores      RiskScore[]
   emergencyContact EmergencyContact?
   chatHistory     ChatHistory[]
@@ -81,14 +82,25 @@ model UserProgress {
   @@unique([userId, sessionId])
 }
 
-model CrisisLog {
-  id          String    @id @default(uuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  messageText String
-  detection   String    // detected intent or keywords
-  timestamp   DateTime  @default(now())
-  resolved    Boolean   @default(false)
+model EmergencyHelpline {
+  id          String   @id @default(uuid())
+  country     String
+  name        String
+  phone       String
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@index([country])
+}
+
+model CrisisEvent {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  riskLevel       RiskLevel @default(LOW)
+  detectionPhrase String?
+  timestamp       DateTime  @default(now())
+  resolved        Boolean   @default(false)
 }
 
 model RiskScore {

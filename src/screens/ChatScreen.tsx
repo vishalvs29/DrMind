@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     StyleSheet,
     View,
@@ -8,123 +8,127 @@ import {
     TouchableOpacity,
     KeyboardAvoidingView,
     Platform,
-    Alert
+    Dimensions
 } from 'react-native';
-import { Send, Phone, Info } from 'lucide-react-native';
+import { Send, ShieldAlert } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
-import { tokens } from '../theme/tokens';
-import { Typography } from '../components/Typography';
 import { Card } from '../components/Card';
-import { chatService, Message } from '../services/ChatService';
+import { Typography } from '../components/Typography';
+import { CrisisResponseModal } from '../components/CrisisResponseModal';
+import { processChatMessage, getLocalHelplines, Message, RiskLevel } from '../services/CrisisService';
 
 export const ChatScreen = () => {
     const { theme } = useTheme();
-    const [inputText, setInputText] = useState('');
     const [messages, setMessages] = useState<Message[]>([
         {
-            id: '0',
-            text: "Hello! I'm your AI mental health companion. How are you feeling today?",
+            id: '1',
+            text: "Hello! I'm DrMindit, your mental health companion. How are you feeling today?",
             sender: 'ai',
             timestamp: new Date(),
         }
     ]);
+    const [inputText, setInputText] = useState('');
+    const [isCrisisModalVisible, setCrisisModalVisible] = useState(false);
+    const [currentRisk, setCurrentRisk] = useState<RiskLevel>('LOW');
     const flatListRef = useRef<FlatList>(null);
 
     const handleSend = async () => {
         if (!inputText.trim()) return;
 
-        const newMessages = await chatService.sendMessage(inputText);
-        setMessages(prev => [...prev, ...newMessages]);
+        const userMessage: Message = {
+            id: Date.now().toString(),
+            text: inputText.trim(),
+            sender: 'user',
+            timestamp: new Date(),
+        };
+
+        setMessages(prev => [...prev, userMessage]);
         setInputText('');
 
-        // Check for crisis
-        if (newMessages.some(m => m.sender === 'ai' && m.intent === 'crisis_alert')) {
-            Alert.alert(
-                "Safe Support",
-                "It sounds like you're going through a lot. Please remember that you can call a professional helpline at any time.",
-                [
-                    { text: "Call 988 (Helpline)", onPress: () => console.log('Calling helpline...') },
-                    { text: "Continue Chat", style: 'cancel' }
-                ]
-            );
+        const { response, risk } = await processChatMessage(userMessage.text);
+        setCurrentRisk(risk);
+
+        if (risk === 'HIGH' || risk === 'CRITICAL') {
+            setCrisisModalVisible(true);
         }
 
+        const aiMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            text: response,
+            sender: 'ai',
+            timestamp: new Date(),
+            isCrisis: risk !== 'LOW',
+        };
+
+        setTimeout(() => {
+            setMessages(prev => [...prev, aiMessage]);
+        }, 600);
+    };
+
+    useEffect(() => {
         setTimeout(() => {
             flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-    };
+        }, 200);
+    }, [messages]);
 
-    const renderMessage = ({ item }: { item: Message }) => {
-        const isUser = item.sender === 'user';
-
-        return (
-            <View style={[
-                styles.messageWrapper,
-                isUser ? styles.userWrapper : styles.aiWrapper
-            ]}>
-                <View style={[
-                    styles.messageBubble,
-                    isUser
-                        ? { backgroundColor: theme.primary, borderBottomRightRadius: 4 }
-                        : { backgroundColor: theme.surfaceContainerHigh, borderBottomLeftRadius: 4 }
-                ]}>
-                    <Typography
-                        variant="bodyMd"
-                        color={isUser ? theme.onPrimary : theme.onSurface}
-                    >
-                        {item.text}
-                    </Typography>
-                </View>
-                <Typography variant="labelSm" color={theme.onSurfaceVariant} style={styles.timestamp}>
-                    {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Typography>
-            </View>
-        );
-    };
+    const helplines = getLocalHelplines('US');
 
     return (
-        <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
-            <View style={styles.header}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+            <View style={[styles.header, { borderBottomColor: theme.border }]}>
                 <View>
-                    <Typography variant="headlineSm">AI Chat Therapy</Typography>
-                    <Typography variant="labelSm" color={theme.secondary}>Secure & Private</Typography>
+                    <Typography variant="h2">AI Support</Typography>
+                    <View style={styles.statusRow}>
+                        <View style={styles.statusDot} />
+                        <Typography variant="caption">Always here for you</Typography>
+                    </View>
                 </View>
                 <TouchableOpacity
-                    style={[styles.helplineButton, { backgroundColor: theme.errorContainer }]}
-                    onPress={() => Alert.alert("Helplines", "National Suicide Prevention: 988\nCrisis Text Line: Text HOME to 741741")}
+                    style={styles.sosCircle}
+                    onPress={() => setCrisisModalVisible(true)}
                 >
-                    <Phone size={20} color={theme.onErrorContainer} />
-                    <Typography variant="labelSm" color={theme.onErrorContainer} style={{ marginLeft: 4 }}>
-                        SOS
-                    </Typography>
+                    <ShieldAlert size={22} color="#FFF" />
                 </TouchableOpacity>
             </View>
 
+            <FlatList
+                ref={flatListRef}
+                data={messages}
+                keyExtractor={item => item.id}
+                contentContainerStyle={styles.messageList}
+                renderItem={({ item }) => (
+                    <View style={[
+                        styles.messageWrapper,
+                        item.sender === 'user' ? styles.userWrapper : styles.aiWrapper
+                    ]}>
+                        <Card
+                            variant={item.sender === 'user' ? 'high' : 'lowest'}
+                            style={[
+                                styles.messageCard,
+                                item.sender === 'user' ? styles.userCard : styles.aiCard,
+                                item.isCrisis && { borderColor: '#EF4444', borderWidth: 1.5 }
+                            ]}
+                        >
+                            <Typography
+                                variant="body"
+                                style={{ color: item.sender === 'user' ? '#FFF' : theme.text }}
+                            >
+                                {item.text}
+                            </Typography>
+                        </Card>
+                    </View>
+                )}
+            />
+
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.keyboardView}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
             >
-                <FlatList
-                    ref={flatListRef}
-                    data={messages}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderMessage}
-                    contentContainerStyle={styles.listContent}
-                />
-
-                <View style={[styles.inputContainer, { backgroundColor: theme.surface }]}>
+                <View style={[styles.inputArea, { borderTopColor: theme.border }]}>
                     <TextInput
-                        style={[
-                            styles.input,
-                            {
-                                backgroundColor: theme.surfaceContainerLow,
-                                color: theme.onSurface,
-                                borderColor: theme.outlineVariant
-                            }
-                        ]}
-                        placeholder="Type your message..."
-                        placeholderTextColor={theme.onSurfaceVariant}
+                        style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
+                        placeholder="Type your thoughts..."
+                        placeholderTextColor={theme.textSecondary}
                         value={inputText}
                         onChangeText={setInputText}
                         multiline
@@ -133,69 +137,68 @@ export const ChatScreen = () => {
                         style={[styles.sendButton, { backgroundColor: theme.primary }]}
                         onPress={handleSend}
                     >
-                        <Send size={24} color={theme.onPrimary} />
+                        <Send size={20} color="#FFF" />
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
+
+            <CrisisResponseModal
+                visible={isCrisisModalVisible}
+                onClose={() => setCrisisModalVisible(false)}
+                helplines={helplines}
+                riskLevel={currentRisk === 'CRITICAL' ? 'CRITICAL' : 'HIGH'}
+            />
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    safeArea: { flex: 1 },
+    container: { flex: 1 },
     header: {
-        padding: tokens.spacing.lg,
+        padding: 20,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(0,0,0,0.05)',
+        borderBottomWidth: 1
     },
-    helplineButton: {
-        flexDirection: 'row',
+    statusRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+    statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981', marginRight: 6 },
+    sosCircle: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#EF4444',
         alignItems: 'center',
-        paddingHorizontal: tokens.spacing.md,
-        paddingVertical: 6,
-        borderRadius: tokens.roundness.full,
+        justifyContent: 'center'
     },
-    keyboardView: { flex: 1 },
-    listContent: { padding: tokens.spacing.lg },
-    messageWrapper: {
-        marginBottom: tokens.spacing.md,
-        maxWidth: '80%',
-    },
+    messageList: { padding: 20, paddingBottom: 40 },
+    messageWrapper: { marginBottom: 16, maxWidth: '85%' },
     userWrapper: { alignSelf: 'flex-end' },
     aiWrapper: { alignSelf: 'flex-start' },
-    messageBubble: {
-        padding: tokens.spacing.md,
-        borderRadius: tokens.roundness.lg,
-    },
-    timestamp: {
-        marginTop: 4,
-        alignSelf: 'flex-end',
-        fontSize: 10,
-    },
-    inputContainer: {
+    messageCard: { padding: 16, borderRadius: 20 },
+    userCard: { backgroundColor: '#6366F1' },
+    aiCard: { backgroundColor: '#F3F4F6' },
+    inputArea: {
+        padding: 16,
         flexDirection: 'row',
-        padding: tokens.spacing.md,
         alignItems: 'center',
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(0,0,0,0.05)',
+        borderTopWidth: 1
     },
     input: {
         flex: 1,
-        borderRadius: tokens.roundness.full,
-        paddingHorizontal: tokens.spacing.lg,
-        paddingVertical: 10,
-        maxHeight: 100,
+        minHeight: 48,
+        maxHeight: 120,
+        borderRadius: 24,
+        paddingHorizontal: 20,
+        paddingVertical: 12,
         fontSize: 16,
+        marginRight: 12
     },
     sendButton: {
         width: 48,
         height: 48,
         borderRadius: 24,
-        justifyContent: 'center',
         alignItems: 'center',
-        marginLeft: tokens.spacing.sm,
-    },
+        justifyContent: 'center'
+    }
 });

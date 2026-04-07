@@ -1,0 +1,15 @@
+{
+  "IN": [
+    { "name": "AASRA", "phone": "+91-9820466726", "desc": "24/7 Suicide Prevention" },
+    { "name": "Kiran", "phone": "1800-599-0019", "desc": "Mental Health Rehab" }
+  ],
+  "US": [
+    { "name": "988 Lifeline", "phone": "988", "desc": "Suicide & Crisis Lifeline" }
+  ],
+  "UK": [
+    { "name": "Samaritans", "phone": "116 123", "desc": "Available day and night" }
+  ],
+  "GLOBAL": [
+    { "name": "Emergency Services", "phone": "112", "desc": "Standard emergency number" }
+  ]
+}
