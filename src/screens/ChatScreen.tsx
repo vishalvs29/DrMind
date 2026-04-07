@@ -7,10 +7,9 @@ import {
     TextInput,
     TouchableOpacity,
     KeyboardAvoidingView,
-    Platform,
-    Dimensions
+    Platform
 } from 'react-native';
-import { Send, ShieldAlert } from 'lucide-react-native';
+import { Send, ShieldAlert, Heart } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { Card } from '../components/Card';
 import { Typography } from '../components/Typography';
@@ -22,7 +21,7 @@ export const ChatScreen = () => {
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
-            text: "Hello! I'm DrMindit, your mental health companion. How are you feeling today?",
+            text: "Hello! I'm DrMindit, your empathetic mental health companion. How are you feeling today?",
             sender: 'ai',
             timestamp: new Date(),
         }
@@ -45,7 +44,7 @@ export const ChatScreen = () => {
         setMessages(prev => [...prev, userMessage]);
         setInputText('');
 
-        const { response, risk } = await processChatMessage(userMessage.text);
+        const { response, risk, emotion } = await processChatMessage(userMessage.text);
         setCurrentRisk(risk);
 
         if (risk === 'HIGH' || risk === 'CRITICAL') {
@@ -58,11 +57,12 @@ export const ChatScreen = () => {
             sender: 'ai',
             timestamp: new Date(),
             isCrisis: risk !== 'LOW',
+            emotion: emotion
         };
 
         setTimeout(() => {
             setMessages(prev => [...prev, aiMessage]);
-        }, 600);
+        }, 800);
     };
 
     useEffect(() => {
@@ -77,11 +77,13 @@ export const ChatScreen = () => {
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
             <View style={[styles.header, { borderBottomColor: theme.border }]}>
                 <View>
-                    <Typography variant="h2">AI Support</Typography>
-                    <View style={styles.statusRow}>
-                        <View style={styles.statusDot} />
-                        <Typography variant="caption">Always here for you</Typography>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Typography variant="h2">Empathetic Support</Typography>
+                        <View style={[styles.activeIndicator, { backgroundColor: '#10B981' }]} />
                     </View>
+                    <Typography variant="caption" style={{ color: theme.textSecondary }}>
+                        Deep Context Understanding Active
+                    </Typography>
                 </View>
                 <TouchableOpacity
                     style={styles.sosCircle}
@@ -101,6 +103,14 @@ export const ChatScreen = () => {
                         styles.messageWrapper,
                         item.sender === 'user' ? styles.userWrapper : styles.aiWrapper
                     ]}>
+                        {item.sender === 'ai' && item.emotion && item.emotion !== 'NEUTRAL' && (
+                            <View style={styles.emotionTag}>
+                                <Heart size={12} color="#6366F1" fill="#6366F1" style={{ marginRight: 4 }} />
+                                <Typography variant="caption" style={{ color: '#6366F1', fontWeight: '700' }}>
+                                    {item.emotion}
+                                </Typography>
+                            </View>
+                        )}
                         <Card
                             variant={item.sender === 'user' ? 'high' : 'lowest'}
                             style={[
@@ -111,7 +121,7 @@ export const ChatScreen = () => {
                         >
                             <Typography
                                 variant="body"
-                                style={{ color: item.sender === 'user' ? '#FFF' : theme.text }}
+                                style={{ color: item.sender === 'user' ? '#FFF' : theme.text, lineHeight: 22 }}
                             >
                                 {item.text}
                             </Typography>
@@ -127,7 +137,7 @@ export const ChatScreen = () => {
                 <View style={[styles.inputArea, { borderTopColor: theme.border }]}>
                     <TextInput
                         style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
-                        placeholder="Type your thoughts..."
+                        placeholder="How are you feeling deep down?"
                         placeholderTextColor={theme.textSecondary}
                         value={inputText}
                         onChangeText={setInputText}
@@ -161,8 +171,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderBottomWidth: 1
     },
-    statusRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-    statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981', marginRight: 6 },
+    activeIndicator: { width: 6, height: 6, borderRadius: 3, marginLeft: 8 },
     sosCircle: {
         width: 44,
         height: 44,
@@ -172,9 +181,19 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     messageList: { padding: 20, paddingBottom: 40 },
-    messageWrapper: { marginBottom: 16, maxWidth: '85%' },
+    messageWrapper: { marginBottom: 20, maxWidth: '85%' },
     userWrapper: { alignSelf: 'flex-end' },
     aiWrapper: { alignSelf: 'flex-start' },
+    emotionTag: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 6,
+        backgroundColor: '#EEF2FF',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 8,
+        alignSelf: 'flex-start'
+    },
     messageCard: { padding: 16, borderRadius: 20 },
     userCard: { backgroundColor: '#6366F1' },
     aiCard: { backgroundColor: '#F3F4F6' },
@@ -186,19 +205,24 @@ const styles = StyleSheet.create({
     },
     input: {
         flex: 1,
-        minHeight: 48,
+        minHeight: 52,
         maxHeight: 120,
-        borderRadius: 24,
+        borderRadius: 26,
         paddingHorizontal: 20,
-        paddingVertical: 12,
+        paddingVertical: 14,
         fontSize: 16,
         marginRight: 12
     },
     sendButton: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: 52,
+        height: 52,
+        borderRadius: 26,
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        shadowColor: '#6366F1',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 4
     }
 });
