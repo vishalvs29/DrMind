@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  CORPORATE
+  PERSONNEL
+  ADMIN
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  password        String
+  name            String?
+  role            Role           @default(STUDENT)
+  organization    String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  moodLogs        MoodLog[]
+  userProgress    UserProgress[]
+  crisisLogs      CrisisLog[]
+  riskScores      RiskScore[]
+  emergencyContact EmergencyContact?
+  chatHistory     ChatHistory[]
+}
+
+model MoodLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  level     Int      // 1-5
+  note      String?
+  timestamp DateTime @default(now())
+}
+
+model Session {
+  id          String         @id @default(uuid())
+  title       String
+  description String?
+  audioUrl    String
+  duration    Int           // in seconds
+  programId   String?
+  program     Program?       @relation(fields: [programId], references: [id])
+  progress    UserProgress[]
+}
+
+model Program {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  totalDays   Int       @default(21)
+  sessions    Session[]
+}
+
+model UserProgress {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  sessionId    String
+  session      Session  @relation(fields: [sessionId], references: [id])
+  completed    Boolean  @default(false)
+  progressSec  Int      @default(0)
+  lastAccessed DateTime @default(now())
+
+  @@unique([userId, sessionId])
+}
+
+model CrisisLog {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  messageText String
+  detection   String    // detected intent or keywords
+  timestamp   DateTime  @default(now())
+  resolved    Boolean   @default(false)
+}
+
+model RiskScore {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  score     Int
+  level     RiskLevel @default(LOW)
+  timestamp DateTime  @default(now())
+}
+
+model EmergencyContact {
+  id           String @id @default(uuid())
+  userId       String @unique
+  user         User   @relation(fields: [userId], references: [id])
+  name         String
+  phone        String
+  relationship String
+}
+
+model ChatHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  sender    String   // "user" or "ai"
+  timestamp DateTime @default(now())
+}
