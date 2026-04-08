@@ -19,7 +19,8 @@ export const SessionPlayerScreen = ({ navigation, route }: any) => {
 
     useEffect(() => {
         const initAudio = async () => {
-            await audioService.load(SAMPLE_AUDIO_URL, (status) => {
+            const audioUrl = route.params?.session?.audioUrl || SAMPLE_AUDIO_URL;
+            await audioService.load(audioUrl, (status) => {
                 if (status.isLoaded) {
                     setPosition(status.positionMillis);
                     setDuration(status.durationMillis || 0);
@@ -77,10 +78,10 @@ export const SessionPlayerScreen = ({ navigation, route }: any) => {
 
                 <View style={styles.info}>
                     <Typography variant="displaySm" color={theme.onSurface} style={styles.title}>
-                        Morning Resilience
+                        {route.params?.session?.title || 'Guided Session'}
                     </Typography>
                     <Typography variant="bodyLg" color={theme.onSurfaceVariant}>
-                        Guided Meditation • 10 min
+                        {route.params?.program?.title || 'Meditation'} • {route.params?.session?.duration / 60 || 10} min
                     </Typography>
                 </View>
 

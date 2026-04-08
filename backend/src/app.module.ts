@@ -12,6 +12,7 @@ import { AiModule } from './ai/ai.module';
 import { ChatModule } from './chat/chat.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { CrisisModule } from './crisis/crisis.module';
+import { MoodModule } from './mood/mood.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CrisisModule } from './crisis/crisis.module';
     ChatModule,
     AnalyticsModule,
     CrisisModule,
+    MoodModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

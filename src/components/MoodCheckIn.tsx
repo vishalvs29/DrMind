@@ -5,6 +5,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { tokens } from '../theme/tokens';
 import { Typography } from './Typography';
 import { Card } from './Card';
+import { moodService } from '../services/MoodService';
 
 const MOODS = [
     { id: 'happy', label: 'Happy', Icon: Smile, color: '#FFD700' },
@@ -28,14 +29,21 @@ export const MoodCheckIn = () => {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.moodScroll}
             >
-                {MOODS.map((mood) => {
+                {MOODS.map((mood, index) => {
                     const isSelected = selectedMood === mood.id;
                     const { Icon } = mood;
 
                     return (
                         <TouchableOpacity
                             key={mood.id}
-                            onPress={() => setSelectedMood(mood.id)}
+                            onPress={async () => {
+                                setSelectedMood(mood.id);
+                                try {
+                                    await moodService.logMood(index + 1);
+                                } catch (error) {
+                                    console.error('Failed to log mood:', error);
+                                }
+                            }}
                             activeOpacity={0.7}
                             style={[
                                 styles.moodChip,

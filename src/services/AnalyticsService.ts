@@ -1,48 +1,31 @@
-export interface MoodEntry {
-    date: string;
-    mood: 'happy' | 'calm' | 'neutral' | 'sad' | 'anxious';
-    level: number; // 1-5
-}
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export interface AnalyticsData {
-    moodHistory: MoodEntry[];
-    stressLevel: 'Low' | 'Medium' | 'High';
-    sessionMinutes: number;
-    streakDays: number;
-    riskStatus: 'Low' | 'Medium' | 'High';
-}
+const API_URL = 'http://localhost:3000'; // Should be config based
 
-const MOCK_DATA: AnalyticsData = {
-    moodHistory: [
-        { date: 'Mon', mood: 'happy', level: 5 },
-        { date: 'Tue', mood: 'calm', level: 4 },
-        { date: 'Wed', mood: 'neutral', level: 3 },
-        { date: 'Thu', mood: 'anxious', level: 2 },
-        { date: 'Fri', mood: 'neutral', level: 3 },
-        { date: 'Sat', mood: 'calm', level: 4 },
-        { date: 'Sun', mood: 'happy', level: 5 },
-    ],
-    stressLevel: 'Medium',
-    sessionMinutes: 125,
-    streakDays: 5,
-    riskStatus: 'Low',
+export const analyticsService = {
+    async getMoodHistory() {
+        const token = await AsyncStorage.getItem('userToken');
+        return axios.get(`${API_URL}/mood/history`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+    },
+
+    async getInsights() {
+        const token = await AsyncStorage.getItem('userToken');
+        return axios.get(`${API_URL}/analytics/insights`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+    },
+
+    getMoodColor(mood: string | number) {
+        const colors: Record<string, string> = {
+            '5': '#FFD700',
+            '4': '#87CEEB',
+            '3': '#B0C4DE',
+            '2': '#4682B4',
+            '1': '#F4A460',
+        };
+        return colors[String(mood)] || '#B0C4DE';
+    }
 };
-
-class AnalyticsService {
-    getAnalytics(): AnalyticsData {
-        return MOCK_DATA;
-    }
-
-    getMoodColor(mood: string): string {
-        switch (mood) {
-            case 'happy': return '#FFD700';
-            case 'calm': return '#87CEEB';
-            case 'neutral': return '#B0C4DE';
-            case 'sad': return '#4682B4';
-            case 'anxious': return '#F4A460';
-            default: return '#CCC';
-        }
-    }
-}
-
-export const analyticsService = new AnalyticsService();

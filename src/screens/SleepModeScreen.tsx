@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { Moon, Play, Pause, X, Clock } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,18 +7,63 @@ import { tokens } from '../theme/tokens';
 import { Typography } from '../components/Typography';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
+import { audioService } from '../services/AudioService';
 
 const SLEEP_SOUNDS = [
-    { id: 'rain', name: 'Soft Rain', icon: 'cloud-rain' },
-    { id: 'ocean', name: 'Ocean Waves', icon: 'waves' },
-    { id: 'forest', name: 'Deep Forest', icon: 'tree' },
-    { id: '432hz', name: '432Hz Healing', icon: 'music' },
+    { id: 'rain', name: 'Soft Rain', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' }, // Placeholder
+    { id: 'ocean', name: 'Ocean Waves', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+    { id: 'forest', name: 'Deep Forest', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
+    { id: '432hz', name: '432Hz Healing', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3' },
 ];
 
 export const SleepModeScreen = ({ navigation }: any) => {
     const { theme } = useTheme();
-    const [selectedSound, setSelectedSound] = useState('rain');
+    const [selectedSound, setSelectedSound] = useState(SLEEP_SOUNDS[0]);
     const [isTimerActive, setIsTimerActive] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes in seconds
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        if (isTimerActive && timeLeft > 0) {
+            timerRef.current = setInterval(() => {
+                setTimeLeft((prev) => prev - 1);
+            }, 1000);
+        } else if (timeLeft === 0) {
+            handleStop();
+        }
+
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [isTimerActive, timeLeft]);
+
+    const handleStart = async () => {
+        setIsTimerActive(true);
+        try {
+            await audioService.load(selectedSound.url, (status) => {
+                if (status.didJustFinish) {
+                    audioService.play(); // Loop
+                }
+            });
+            await audioService.play();
+        } catch (error) {
+            console.error('Failed to play sleep sound:', error);
+        }
+    };
+
+    const handleStop = async () => {
+        setIsTimerActive(false);
+        if (timerRef.current) clearInterval(timerRef.current);
+        await audioService.stop();
+        await audioService.unload();
+        setTimeLeft(30 * 60); // Reset
+    };
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -52,12 +97,12 @@ export const SleepModeScreen = ({ navigation }: any) => {
                             key={sound.id}
                             style={[
                                 styles.soundCard,
-                                selectedSound === sound.id && { backgroundColor: 'rgba(73, 88, 172, 0.3)', borderColor: theme.primary, borderWidth: 1 }
+                                selectedSound.id === sound.id && { backgroundColor: 'rgba(73, 88, 172, 0.3)', borderColor: theme.primary, borderWidth: 1 }
                             ]}
-                            onPress={() => setSelectedSound(sound.id)}
+                            onPress={() => setSelectedSound(sound)}
                         >
                             <Typography variant="labelLg" color="#FFFFFF">{sound.name}</Typography>
-                            {selectedSound === sound.id && <Play size={20} color={theme.primary} fill={theme.primary} />}
+                            {selectedSound.id === sound.id && <Play size={20} color={theme.primary} fill={theme.primary} />}
                         </Card>
                     ))}
                 </View>
@@ -67,17 +112,18 @@ export const SleepModeScreen = ({ navigation }: any) => {
                         <View style={styles.timerRow}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <Clock size={20} color="#FFFFFF" />
-                                <Typography variant="bodyMd" color="#FFFFFF" style={{ marginLeft: 12 }}>Sleep Timer</Typography>
+                                <Typography variant="bodyMd" color="#FFFFFF" style={{ marginLeft: 12 }}>Time Remaining</Typography>
                             </View>
-                            <Typography variant="labelLg" color={theme.primary}>30 min</Typography>
+                            <Typography variant="labelLg" color={theme.primary}>{formatTime(timeLeft)}</Typography>
                         </View>
                     </Card>
                 </View>
 
                 <Button
                     title={isTimerActive ? "Stop Sanctuary" : "Start Sanctuary"}
-                    onPress={() => setIsTimerActive(!isTimerActive)}
+                    onPress={isTimerActive ? handleStop : handleStart}
                     style={styles.startButton}
+                    variant={isTimerActive ? "secondary" : "primary"}
                 />
             </ScrollView>
         </SafeAreaView>
@@ -111,3 +157,4 @@ const styles = StyleSheet.create({
     timerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     startButton: { width: '100%', marginTop: tokens.spacing.md },
 });
+village
