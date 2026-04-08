@@ -2,7 +2,7 @@ import helplinesData from '../data/helplines.json';
 
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type EmotionType = 'ANXIETY' | 'STRESS' | 'SADNESS' | 'ANGER' | 'LONELINESS' | 'HOPELESSNESS' | 'NEUTRAL';
-export type ActionType = 'none' | 'suggest_session' | 'start_session' | 'show_helpline' | 'force_crisis_ui';
+export type ActionType = 'NONE' | 'SUGGEST_SESSION' | 'START_SESSION' | 'SHOW_HELPLINE' | 'FORCE_CRISIS_UI';
 
 export interface ChatResponse {
     message: string;
@@ -30,34 +30,37 @@ export interface Message {
 
 // In production, this would call the backend /chat/message endpoint
 export const processChatMessage = async (text: string): Promise<ChatResponse> => {
-    // Simulating backend logic for offline resilience or demo purposes
-    const lowerText = text.toLowerCase();
+    try {
+        const token = localStorage.getItem('token'); // Simplistic for demo, in real app use a secure storage
+        const response = await fetch(`${process.env.API_URL || 'http://localhost:3000'}/chat/message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ text })
+        });
 
-    if (lowerText.includes('die') || lowerText.includes('suicide') || lowerText.includes('end it')) {
+        if (!response.ok) {
+            throw new Error('Failed to fetch AI response');
+        }
+
+        const data = await response.json();
         return {
-            message: "I am deeply concerned about your safety. I am sharing local resources that can help you right now. You are not alone.",
-            action: 'force_crisis_ui',
-            audio: "https://drmindit.com/assets/audio/emergency_calm.mp3",
-            emotion: 'HOPELESSNESS',
-            intensity: 0.95
+            message: data.message,
+            action: data.action as ActionType,
+            audio: data.audio,
+            emotion: data.emotion as EmotionType,
+            intensity: data.intensity
+        };
+    } catch (error) {
+        console.error('Chat API Error:', error);
+        return {
+            message: "I'm having trouble connecting right now. Please try again or reach out to a helpline if you need immediate support.",
+            action: 'NONE',
+            audio: null,
+            emotion: 'NEUTRAL',
+            intensity: 0.1
         };
     }
-
-    if (lowerText.includes('anxious') || lowerText.includes('panic')) {
-        return {
-            message: "I\u0027m hearing a lot of anxiety right now. Let\u0027s take a moment for a box breathing session together.",
-            action: 'start_session',
-            audio: "https://drmindit.com/assets/audio/box_breathing.mp3",
-            emotion: 'ANXIETY',
-            intensity: 0.6
-        };
-    }
-
-    return {
-        message: "I'm listening. Thank you for sharing that with me. What else is on your mind?",
-        action: 'none',
-        audio: null,
-        emotion: 'NEUTRAL',
-        intensity: 0.1
-    };
 };

@@ -13,6 +13,9 @@ export class ConversationService {
     ) { }
 
     async processInput(userId: string, input: string) {
+        if (!userId) {
+            throw new Error('User ID is required for secure processing');
+        }
         // Log user message
         await this.prisma.chatHistory.create({
             data: { userId, message: input, sender: 'user' }

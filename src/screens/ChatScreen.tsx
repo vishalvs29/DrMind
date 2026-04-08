@@ -8,7 +8,8 @@ import {
     TouchableOpacity,
     KeyboardAvoidingView,
     Platform,
-    Alert
+    Alert,
+    NativeModules
 } from 'react-native';
 import { Send, ShieldAlert, Heart, Play } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
@@ -35,15 +36,16 @@ export const ChatScreen = () => {
 
     const handleAction = async (response: ChatResponse) => {
         switch (response.action) {
-            case 'start_session':
+            case 'START_SESSION':
                 if (response.audio) {
                     await audioService.play();
                 }
                 break;
-            case 'show_helpline':
+            case 'SHOW_HELPLINE':
+            case 'FORCE_CRISIS_UI':
                 setCrisisModalVisible(true);
                 break;
-            case 'suggest_session':
+            case 'SUGGEST_SESSION':
                 // UI already shows suggestion in message text
                 break;
             default:
@@ -89,7 +91,12 @@ export const ChatScreen = () => {
         }, 200);
     }, [messages]);
 
-    const helplines = getLocalHelplines('IN');
+    const userLocale = Platform.OS === 'ios'
+        ? NativeModules?.SettingsManager?.settings?.AppleLocale || NativeModules?.SettingsManager?.settings?.AppleLanguages[0]
+        : NativeModules?.I18nManager?.localeIdentifier;
+
+    const countryCode = (userLocale?.split('_')[1] || userLocale?.split('-')[1] || 'IN').toUpperCase();
+    const helplines = getLocalHelplines(countryCode);
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -97,7 +104,7 @@ export const ChatScreen = () => {
                 <View>
                     <Typography variant="headlineSm">Emotional Intelligence</Typography>
                     <Typography variant="labelSm" style={{ color: theme.onSurfaceVariant }}>
-                        Action-Aware Session Support
+                        Action-Aware Session Support ({countryCode})
                     </Typography>
                 </View>
                 <TouchableOpacity
@@ -140,7 +147,7 @@ export const ChatScreen = () => {
                                 {item.text}
                             </Typography>
 
-                            {item.action === 'suggest_session' && (
+                            {item.action === 'SUGGEST_SESSION' && (
                                 <TouchableOpacity
                                     style={styles.actionButton}
                                     onPress={() => audioService.play()}

@@ -24,4 +24,18 @@ export class AuthController {
         }
         return this.authService.login(user);
     }
+
+    @Post('forgot-password')
+    @ApiOperation({ summary: 'Request password reset email (Skeleton)' })
+    async forgotPassword(@Body('email') email: string) {
+        // TODO: Implement email service and token persistence
+        return { message: 'If the email exists, a reset link will be sent.' };
+    }
+
+    @Post('reset-password')
+    @ApiOperation({ summary: 'Reset password using token (Skeleton)' })
+    async resetPassword(@Body() data: any) {
+        // TODO: Validate reset token and update password hashed
+        return { message: 'Password reset successful.' };
+    }
 }

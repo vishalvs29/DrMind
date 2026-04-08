@@ -10,9 +10,32 @@ export const mockPrismaService = {
     },
     crisisEvent: {
         create: jest.fn(),
+        deleteMany: jest.fn(),
     },
     emergencyHelpline: {
         findMany: jest.fn(),
+        count: jest.fn(),
+        createMany: jest.fn(),
+    },
+    userSessionProgress: {
+        deleteMany: jest.fn(),
+        findUnique: jest.fn(),
+        update: jest.fn(),
+        upsert: jest.fn(),
+        findMany: jest.fn(),
+        findFirst: jest.fn(),
+    },
+    chatHistory: {
+        deleteMany: jest.fn(),
+        create: jest.fn(),
+        findMany: jest.fn(),
+    },
+    moodLog: {
+        deleteMany: jest.fn(),
+        create: jest.fn(),
+    },
+    riskScore: {
+        deleteMany: jest.fn(),
     },
 };
 

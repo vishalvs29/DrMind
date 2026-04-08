@@ -4,12 +4,20 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
+  // Bootstrap Guards
+  if (!process.env.JWT_SECRET) {
+    console.error('CRITICAL: JWT_SECRET environment variable is not set! Application shutting down.');
+    process.exit(1);
+  }
+
   const app = await NestFactory.create(AppModule);
 
   // Global settings
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
+
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'https://drmindit.com'];
   app.enableCors({
-    origin: ['https://drmindit.com', 'http://localhost:3000'],
+    origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

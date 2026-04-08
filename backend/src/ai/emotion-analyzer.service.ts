@@ -1,20 +1,23 @@
 import { Injectable } from '@nestjs/common';
 
 export type IntensityLevel = 'low' | 'medium' | 'high';
+export type SentimentType = 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
 
 export interface AnalysisResult {
     emotion: string;
     intensity: number;
     level: IntensityLevel;
-    sentiment: 'positive' | 'neutral' | 'negative';
+    sentiment: SentimentType;
 }
 
 const PATTERNS = {
-    ANXIETY: ['panic', 'worry', 'scared', 'shaking', 'heart racing', 'breathless'],
-    SADNESS: ['sad', 'unhappy', 'cry', 'alone', 'hurt', 'miserable'],
-    STRESS: ['stress', 'overwhelmed', 'pressure', 'too much', 'exhausted'],
-    ANGER: ['mad', 'furious', 'annoyed', 'pissed', 'frustrated'],
-    CRISIS: ['kill myself', 'suicide', 'end it', 'disappear', 'hopeless', 'pointless']
+    ANXIETY: ['anxious', 'panic', 'scared', 'worry', 'breathless', 'shaking', 'nervous', 'racing heart', 'heart is racing', 'panic attack'],
+    SADNESS: ['sad', 'crying', 'unhappy', 'miss', 'hurt', 'pain', 'heartbroken', 'miserable'],
+    STRESS: ['stress', 'overwhelmed', 'too much', 'exhausted', 'busy', 'pressure', 'burnout'],
+    ANGER: ['angry', 'mad', 'hate', 'furious', 'annoyed', 'pissed', 'frustrated'],
+    LONELINESS: ['lonely', 'alone', 'no one', 'isolated', 'ignored', 'empty'],
+    HOPELESSNESS: ['hopeless', 'pointless', 'no future', 'disappear', 'give up', 'done with this'],
+    CRISIS: ['kill myself', 'suicide', 'end it']
 };
 
 @Injectable()
@@ -33,22 +36,27 @@ export class EmotionAnalyzerService {
         }
 
         // Crisis detection override
-        if (PATTERNS.CRISIS.some(p => text.includes(p))) {
-            detectedEmotion = 'CRISIS';
+        if (PATTERNS.CRISIS.some(p => text.includes(p)) || detectedEmotion === 'HOPELESSNESS') {
+            if (PATTERNS.CRISIS.some(p => text.includes(p))) {
+                detectedEmotion = 'CRISIS';
+            }
         }
 
-        let intensity = Math.min(0.1 + (maxMatches * 0.3), 1.0);
-        if (text.includes('very') || text.includes('really') || text.includes('!')) {
-            intensity = Math.min(intensity + 0.3, 1.0);
+        let intensity = Math.min(0.2 + (maxMatches * 0.2), 1.0);
+        if (text.includes('very') || text.includes('really') || text.includes('extremely') || text.includes('!')) {
+            intensity = Math.min(intensity + 0.2, 1.0);
         }
 
         let level: IntensityLevel = 'low';
         if (intensity > 0.7) level = 'high';
         else if (intensity > 0.3) level = 'medium';
 
-        let sentiment: 'positive' | 'neutral' | 'negative' = 'neutral';
-        if (detectedEmotion !== 'NEUTRAL') sentiment = 'negative';
-        else if (text.includes('good') || text.includes('happy')) sentiment = 'positive';
+        let sentiment: SentimentType = 'NEUTRAL';
+        if (detectedEmotion !== 'NEUTRAL') {
+            sentiment = 'NEGATIVE';
+        } else if (text.includes('good') || text.includes('better') || text.includes('happy')) {
+            sentiment = 'POSITIVE';
+        }
 
         return { emotion: detectedEmotion, intensity, level, sentiment };
     }

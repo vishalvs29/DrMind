@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EmotionService, EmotionResult } from './emotion.service';
+import { EmotionAnalyzerService, AnalysisResult as EmotionResult } from './emotion-analyzer.service';
 
 interface ContextItem {
     message: string;
@@ -13,10 +13,10 @@ export class AiService {
     private contexts: Map<string, ContextItem[]> = new Map();
     private readonly MAX_CONTEXT_SIZE = 10;
 
-    constructor(private emotionService: EmotionService) { }
+    constructor(private analyzer: EmotionAnalyzerService) { }
 
     async processInput(userId: string, input: string): Promise<{ response: string; emotion: EmotionResult }> {
-        const emotionResult = this.emotionService.analyzeEmotion(input);
+        const emotionResult = this.analyzer.analyze(input);
 
         // Add to context
         this.updateContext(userId, input, 'user', emotionResult);
@@ -28,7 +28,7 @@ export class AiService {
         const responseText = this.generateTherapyResponse(emotionResult, trend);
 
         // Add response to context
-        this.updateContext(userId, responseText, 'ai', { emotion: 'NEUTRAL', intensity: 0, sentiment: 'NEUTRAL' });
+        this.updateContext(userId, responseText, 'ai', { emotion: 'NEUTRAL', intensity: 0, level: 'low', sentiment: 'NEUTRAL' });
 
         return {
             response: responseText,
