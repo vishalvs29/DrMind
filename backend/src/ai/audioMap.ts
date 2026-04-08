@@ -5,4 +5,3 @@ export const audioMap: Record<string, string> = {
     "gentle_reflection": "https://drmindit.com/assets/audio/gentle_reflection.mp3",
     "emergency_calm": "https://drmindit.com/assets/audio/emergency_calm.mp3"
 };
-village

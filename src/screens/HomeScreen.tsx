@@ -62,7 +62,7 @@ export const HomeScreen = ({ navigation }: any) => {
                         <Card
                             variant="high"
                             style={styles.quickActionCard}
-                            onPress={() => console.log('Sleep Mode')}
+                            onPress={() => navigation.navigate('SleepMode')}
                         >
                             <Moon color={theme.secondary} size={24} />
                             <Typography variant="labelMd" color={theme.secondary} style={styles.quickActionLabel}>

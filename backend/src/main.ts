@@ -8,7 +8,11 @@ async function bootstrap() {
 
   // Global settings
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
-  app.enableCors();
+  app.enableCors({
+    origin: ['https://drmindit.com', 'http://localhost:3000'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
 
   // Swagger setup
   const config = new DocumentBuilder()

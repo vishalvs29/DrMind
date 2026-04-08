@@ -29,7 +29,7 @@ export const InsightsScreen = () => {
                                     }
                                 ]}
                             />
-                            <Typography variant="labelSm" color={theme.onSurfaceVariant}>{entry.date}</Typography>
+                            <Typography variant="labelSm" style={{ color: theme.onSurfaceVariant }}>{entry.date}</Typography>
                         </View>
                     );
                 })}
@@ -43,7 +43,7 @@ export const InsightsScreen = () => {
                 <Typography variant="displaySm" style={styles.headerTitle}>
                     Your Insights
                 </Typography>
-                <Typography variant="bodyMd" color={theme.onSurfaceVariant} style={styles.headerSubtitle}>
+                <Typography variant="bodyMd" style={[styles.headerSubtitle, { color: theme.onSurfaceVariant }]}>
                     Understanding your mental wellness journey.
                 </Typography>
 
@@ -61,12 +61,12 @@ export const InsightsScreen = () => {
                     <Card variant="low" style={styles.statCard}>
                         <Activity size={24} color={theme.secondary} />
                         <Typography variant="displaySm" style={styles.statValue}>{data.sessionMinutes}</Typography>
-                        <Typography variant="labelSm" color={theme.onSurfaceVariant}>Session Minutes</Typography>
+                        <Typography variant="labelSm" style={{ color: theme.onSurfaceVariant }}>Session Minutes</Typography>
                     </Card>
                     <Card variant="low" style={styles.statCard}>
                         <Flame size={24} color="#FF8C00" />
                         <Typography variant="displaySm" style={styles.statValue}>{data.streakDays}</Typography>
-                        <Typography variant="labelSm" color={theme.onSurfaceVariant}>Day Streak</Typography>
+                        <Typography variant="labelSm" style={{ color: theme.onSurfaceVariant }}>Day Streak</Typography>
                     </Card>
                 </View>
 
@@ -75,7 +75,7 @@ export const InsightsScreen = () => {
                     <View style={styles.infoRow}>
                         <View>
                             <Typography variant="headlineSm">Current Stress: {data.stressLevel}</Typography>
-                            <Typography variant="bodySm" color={theme.onSurfaceVariant}>
+                            <Typography variant="bodySm" style={{ color: theme.onSurfaceVariant }}>
                                 Based on your heart rate and session frequency.
                             </Typography>
                         </View>
@@ -90,14 +90,14 @@ export const InsightsScreen = () => {
                                 <ShieldAlert size={20} color={theme.secondary} />
                                 <Typography variant="headlineSm" style={{ marginLeft: 8 }}>Risk Detection: {data.riskStatus}</Typography>
                             </View>
-                            <Typography variant="bodySm" color={theme.onSurfaceVariant} style={{ marginTop: 4 }}>
+                            <Typography variant="bodySm" style={[styles.insightBody, { color: theme.onSurfaceVariant }]}>
                                 Your mental health indicators show stability. Keep up your routine!
                             </Typography>
                         </View>
                     </View>
                 </Card>
 
-                <Typography variant="bodySm" color={theme.onSurfaceVariant} style={styles.footerNote}>
+                <Typography variant="bodySm" style={[styles.footerNote, { color: theme.onSurfaceVariant }]}>
                     * Insights are for informational purposes only and not a clinical diagnosis.
                 </Typography>
             </ScrollView>
@@ -127,5 +127,6 @@ const styles = StyleSheet.create({
     infoCard: { marginBottom: tokens.spacing.md },
     infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     statusDot: { width: 16, height: 16, borderRadius: 8 },
+    insightBody: { marginTop: 4 },
     footerNote: { textAlign: 'center', marginTop: tokens.spacing.xl, fontStyle: 'italic' },
 });

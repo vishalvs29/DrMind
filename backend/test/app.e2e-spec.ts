@@ -10,7 +10,12 @@ describe('AppController (e2e)', () => {
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider('BullQueue_analytics-queue')
+      .useValue({ add: jest.fn() })
+      .overrideProvider('BullQueue_background-jobs')
+      .useValue({ add: jest.fn() })
+      .compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();

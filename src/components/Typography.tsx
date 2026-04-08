@@ -1,12 +1,12 @@
 import React from 'react';
-import { Text, TextStyle, StyleSheet } from 'react-native';
+import { Text, TextStyle, StyleSheet, StyleProp } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { tokens } from '../theme/tokens';
 
 interface TypographyProps {
     children: React.ReactNode;
     variant?: keyof typeof tokens.typography.sizes;
-    style?: TextStyle;
+    style?: StyleProp<TextStyle>;
     color?: string;
     numberOfLines?: number;
 }

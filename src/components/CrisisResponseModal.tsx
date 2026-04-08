@@ -28,7 +28,7 @@ export const CrisisResponseModal = ({ visible, onClose, helplines, riskLevel }: 
             <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                        <X color={theme.text} strokeWidth={2.5} />
+                        <X color={theme.onSurface} strokeWidth={2.5} />
                     </TouchableOpacity>
                 </View>
 
@@ -37,14 +37,14 @@ export const CrisisResponseModal = ({ visible, onClose, helplines, riskLevel }: 
                         <ShieldAlert size={80} color="#EF4444" />
                     </View>
 
-                    <Text style={[styles.title, { color: theme.text }]}>You are not alone</Text>
-                    <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+                    <Text style={[styles.title, { color: theme.onSurface }]}>You are not alone</Text>
+                    <Text style={[styles.subtitle, { color: theme.onSurfaceVariant }]}>
                         It sounds like you\u0027re going through a really tough time. We\u0027re here for you,
                         and there are people who can help right now.
                     </Text>
 
                     <View style={styles.helplineSection}>
-                        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+                        <Text style={[styles.sectionTitle, { color: theme.onSurfaceVariant }]}>
                             Immediate Help Resources
                         </Text>
                         {helplines.map((hl, i) => (
@@ -62,7 +62,7 @@ export const CrisisResponseModal = ({ visible, onClose, helplines, riskLevel }: 
                                 </View>
                             </TouchableOpacity>
                         ))}
-                    </div>
+                    </View>
 
                     <TouchableOpacity
                         style={[styles.sosButton, { backgroundColor: '#EF4444' }]}

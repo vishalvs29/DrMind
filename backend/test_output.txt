@@ -1,0 +1,101 @@
+
+> backend@0.0.1 test
+> jest
+
+(node:69824) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/app.controller.spec.ts
+FAIL src/chat/chat.controller.spec.ts
+  ● Test suite failed to run
+
+    Cannot find module './emotion-analyzer.service' from 'chat/conversation.service.ts'
+
+    Require stack:
+      chat/conversation.service.ts
+      chat/chat.controller.ts
+      chat/chat.controller.spec.ts
+
+      1 | import { Injectable } from '@nestjs/common';
+    > 2 | import { EmotionAnalyzerService, AnalysisResult } from './emotion-analyzer.service';
+        | ^
+      3 | import { ResponseService, ResponseAction } from './response.service';
+      4 | import { audioMap } from './audioMap';
+      5 |
+
+      at Resolver._throwModNotFoundError (../node_modules/jest-resolve/build/index.js:863:11)
+      at Object.<anonymous> (chat/conversation.service.ts:2:1)
+      at Object.<anonymous> (chat/chat.controller.ts:2:1)
+      at Object.<anonymous> (chat/chat.controller.spec.ts:2:1)
+
+(node:69815) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+FAIL src/chat/chat.service.spec.ts
+  ● Test suite failed to run
+
+    Cannot find module './emotion-analyzer.service' from 'chat/conversation.service.ts'
+
+    Require stack:
+      chat/conversation.service.ts
+      chat/chat.service.spec.ts
+
+      1 | import { Injectable } from '@nestjs/common';
+    > 2 | import { EmotionAnalyzerService, AnalysisResult } from './emotion-analyzer.service';
+        | ^
+      3 | import { ResponseService, ResponseAction } from './response.service';
+      4 | import { audioMap } from './audioMap';
+      5 |
+
+      at Resolver._throwModNotFoundError (../node_modules/jest-resolve/build/index.js:863:11)
+      at Object.<anonymous> (chat/conversation.service.ts:2:1)
+      at Object.<anonymous> (chat/chat.service.spec.ts:3:1)
+
+(node:69814) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+FAIL src/ai/ai.service.spec.ts
+  ● Test suite failed to run
+
+    ReferenceError: village is not defined
+
+      30 |     }
+      31 | }
+    > 32 | village
+         | ^
+      33 |
+
+      at Object.<anonymous> (ai/response.service.ts:32:1)
+      at Object.<anonymous> (ai/ai.service.spec.ts:3:1)
+
+(node:69816) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:69822) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/auth/auth.service.spec.ts
+(node:69823) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/analytics/analytics.service.spec.ts
+(node:69818) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/sessions/sessions.controller.spec.ts
+(node:69817) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/programs/programs.controller.spec.ts
+(node:69821) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/auth/auth.controller.spec.ts
+(node:69820) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/crisis/crisis.controller.spec.ts
+PASS src/crisis/crisis.service.spec.ts
+(node:69819) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/analytics/analytics.controller.spec.ts
+PASS src/users/users.service.spec.ts
+PASS src/users/users.controller.spec.ts
+PASS src/sessions/sessions.service.spec.ts
+PASS src/programs/programs.service.spec.ts
+
+Test Suites: 3 failed, 13 passed, 16 total
+Tests:       13 passed, 13 total
+Snapshots:   0 total
+Time:        1.42 s, estimated 2 s
+Ran all test suites.

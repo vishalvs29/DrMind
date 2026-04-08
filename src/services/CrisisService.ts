@@ -61,4 +61,3 @@ export const processChatMessage = async (text: string): Promise<ChatResponse> =>
         intensity: 0.1
     };
 };
-village

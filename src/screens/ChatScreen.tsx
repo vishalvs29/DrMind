@@ -16,7 +16,7 @@ import { Card } from '../components/Card';
 import { Typography } from '../components/Typography';
 import { CrisisResponseModal } from '../components/CrisisResponseModal';
 import { processChatMessage, getLocalHelplines, Message, ChatResponse } from '../services/CrisisService';
-import { AudioService } from '../services/AudioService';
+import { audioService } from '../services/AudioService';
 
 export const ChatScreen = () => {
     const { theme } = useTheme();
@@ -37,13 +37,7 @@ export const ChatScreen = () => {
         switch (response.action) {
             case 'start_session':
                 if (response.audio) {
-                    await AudioService.play(response.audio);
-                }
-                break;
-            case 'force_crisis_ui':
-                setCrisisModalVisible(true);
-                if (response.audio) {
-                    await AudioService.play(response.audio);
+                    await audioService.play();
                 }
                 break;
             case 'show_helpline':
@@ -95,14 +89,14 @@ export const ChatScreen = () => {
         }, 200);
     }, [messages]);
 
-    const helplines = getLocalHelplines('US');
+    const helplines = getLocalHelplines('IN');
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-            <View style={[styles.header, { borderBottomColor: theme.border }]}>
+            <View style={[styles.header, { borderBottomColor: theme.outline }]}>
                 <View>
-                    <Typography variant="h2">Emotional Intelligence</Typography>
-                    <Typography variant="caption" style={{ color: theme.textSecondary }}>
+                    <Typography variant="headlineSm">Emotional Intelligence</Typography>
+                    <Typography variant="labelSm" style={{ color: theme.onSurfaceVariant }}>
                         Action-Aware Session Support
                     </Typography>
                 </View>
@@ -127,21 +121,21 @@ export const ChatScreen = () => {
                         {item.sender === 'ai' && item.emotion && item.emotion !== 'NEUTRAL' && (
                             <View style={styles.emotionTag}>
                                 <Heart size={12} color="#6366F1" fill="#6366F1" style={{ marginRight: 4 }} />
-                                <Typography variant="caption" style={{ color: '#6366F1', fontWeight: '700' }}>
+                                <Typography variant="labelSm" style={{ color: '#6366F1', fontWeight: '700' }}>
                                     {item.emotion}
                                 </Typography>
                             </View>
                         )}
                         <Card
-                            variant={item.sender === 'user' ? 'high' : 'lowest'}
+                            variant={item.sender === 'user' ? 'primary' : 'low'}
                             style={[
                                 styles.messageCard,
                                 item.sender === 'user' ? styles.userCard : styles.aiCard
                             ]}
                         >
                             <Typography
-                                variant="body"
-                                style={{ color: item.sender === 'user' ? '#FFF' : theme.text }}
+                                variant="bodyMd"
+                                style={{ color: item.sender === 'user' ? '#FFF' : theme.onSurface }}
                             >
                                 {item.text}
                             </Typography>
@@ -149,10 +143,10 @@ export const ChatScreen = () => {
                             {item.action === 'suggest_session' && (
                                 <TouchableOpacity
                                     style={styles.actionButton}
-                                    onPress={() => item.audio && AudioService.play(item.audio)}
+                                    onPress={() => audioService.play()}
                                 >
                                     <Play size={14} color="#6366F1" style={{ marginRight: 6 }} />
-                                    <Typography variant="caption" style={{ color: '#6366F1', fontWeight: '700' }}>
+                                    <Typography variant="labelSm" style={{ color: '#6366F1', fontWeight: '700' }}>
                                         Start Guided Session
                                     </Typography>
                                 </TouchableOpacity>
@@ -166,11 +160,11 @@ export const ChatScreen = () => {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
             >
-                <View style={[styles.inputArea, { borderTopColor: theme.border }]}>
+                <View style={[styles.inputArea, { borderTopColor: theme.outlineVariant }]}>
                     <TextInput
-                        style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
+                        style={[styles.input, { backgroundColor: theme.surface, color: theme.onSurface }]}
                         placeholder="Help me understand your feelings..."
-                        placeholderTextColor={theme.textSecondary}
+                        placeholderTextColor={theme.onSurfaceVariant}
                         value={inputText}
                         onChangeText={setInputText}
                         multiline
@@ -261,4 +255,3 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     }
 });
-village

@@ -29,4 +29,3 @@ export class ResponseService implements OnModuleInit {
         return this.library['NEUTRAL']['low'][0];
     }
 }
-village

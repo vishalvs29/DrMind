@@ -40,6 +40,16 @@ class AudioService {
         }
     }
 
+    async seekRelative(offsetMillis: number) {
+        if (this.sound) {
+            const status: any = await this.sound.getStatusAsync();
+            if (status.isLoaded) {
+                const newPosition = Math.max(0, Math.min(status.durationMillis || 0, status.positionMillis + offsetMillis));
+                await this.sound.setPositionAsync(newPosition);
+            }
+        }
+    }
+
     async unload() {
         if (this.sound) {
             await this.sound.unloadAsync();

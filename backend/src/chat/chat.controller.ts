@@ -17,4 +17,3 @@ export class ChatController {
         return this.conversationService.processInput(userId, text);
     }
 }
-village

@@ -107,7 +107,10 @@ export const SessionPlayerScreen = ({ navigation, route }: any) => {
                 </View>
 
                 <View style={styles.controls}>
-                    <TouchableOpacity style={styles.controlButton}>
+                    <TouchableOpacity
+                        style={styles.controlButton}
+                        onPress={() => audioService.seekRelative(-15000)}
+                    >
                         <SkipBack size={32} color={theme.onSurface} />
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -120,7 +123,10 @@ export const SessionPlayerScreen = ({ navigation, route }: any) => {
                             <Play size={32} color={theme.onPrimary} fill={theme.onPrimary} />
                         )}
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.controlButton}>
+                    <TouchableOpacity
+                        style={styles.controlButton}
+                        onPress={() => audioService.seekRelative(15000)}
+                    >
                         <SkipForward size={32} color={theme.onSurface} />
                     </TouchableOpacity>
                 </View>

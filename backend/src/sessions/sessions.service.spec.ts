@@ -1,12 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SessionsService } from './sessions.service';
+import { PrismaMockProvider } from '../../test/mocks';
 
 describe('SessionsService', () => {
   let service: SessionsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [SessionsService],
+      providers: [
+        SessionsService,
+        PrismaMockProvider,
+      ],
     }).compile();
 
     service = module.get<SessionsService>(SessionsService);
