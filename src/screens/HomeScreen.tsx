@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, ScrollView, View, SafeAreaView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, ScrollView, View, SafeAreaView, Alert } from 'react-native';
 import { Play, MessageCircle, Moon, Zap } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { tokens } from '../theme/tokens';
@@ -7,15 +7,60 @@ import { Typography } from '../components/Typography';
 import { Card } from '../components/Card';
 import { MoodCheckIn } from '../components/MoodCheckIn';
 import { Button } from '../components/Button';
+import { sessionService } from '../services/sessionService';
+import { useSessionStore } from '../store/sessionStore';
 
 const RECOMMENDED_SESSIONS = [
-    { id: '1', title: 'Morning Clarity', duration: '10 min', type: 'Meditation', color: '#B3BDFF' },
-    { id: '2', title: 'Stress Release', duration: '15 min', type: 'Anxiety', color: '#A7F3EC' },
-    { id: '3', title: 'Deep Sleep', duration: '20 min', type: 'Sleep', color: '#D6BEFF' },
+    {
+        id: '1',
+        title: 'Daily Resilience',
+        duration: '30 min',
+        type: 'Program',
+        color: '#B3BDFF',
+        steps: [
+            { id: 's1', title: 'Brain-Heart Coherence', audioUrl: '/audio/coherence.mp3', duration: 120, order: 1 },
+            { id: 's2', title: 'Wim Hof Breathing', audioUrl: '/audio/wimhof.mp3', duration: 600, order: 2 },
+            { id: 's3', title: 'Bhramari Pranayama', audioUrl: '/audio/bhramari.mp3', duration: 180, order: 3 },
+            { id: 's4', title: 'Meditation', audioUrl: '/audio/meditation.mp3', duration: 900, order: 4 },
+        ]
+    },
 ];
 
 export const HomeScreen = ({ navigation }: any) => {
     const { theme } = useTheme();
+    const { startSession } = useSessionStore();
+
+    useEffect(() => {
+        const checkResume = async () => {
+            try {
+                const res = await sessionService.getResumeProgress();
+                if (res.data && !res.data.isCompleted) {
+                    Alert.alert(
+                        "Continue Session",
+                        `Would you like to resume your session: ${res.data.session.title}?`,
+                        [
+                            { text: "Discard", style: "destructive" },
+                            {
+                                text: "Resume",
+                                onPress: () => {
+                                    startSession(res.data.session, res.data);
+                                    navigation.navigate('SessionPlayer');
+                                }
+                            }
+                        ]
+                    );
+                }
+            } catch (e) {
+                console.warn('Resume check failed', e);
+            }
+        };
+        checkResume();
+    }, []);
+
+    const handleStartSession = (session: any) => {
+        startSession(session);
+        navigation.navigate('SessionPlayer');
+    };
 
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
@@ -42,7 +87,7 @@ export const HomeScreen = ({ navigation }: any) => {
                         <Card
                             variant="primary"
                             style={styles.quickActionCard}
-                            onPress={() => navigation.navigate('SessionPlayer')}
+                            onPress={() => handleStartSession(RECOMMENDED_SESSIONS[0])}
                         >
                             <Play color={theme.onPrimaryContainer} size={24} />
                             <Typography variant="labelMd" color={theme.onPrimaryContainer} style={styles.quickActionLabel}>
@@ -78,7 +123,7 @@ export const HomeScreen = ({ navigation }: any) => {
                         Recommended for You
                     </Typography>
                     {RECOMMENDED_SESSIONS.map((session) => (
-                        <Card key={session.id} style={styles.sessionCard} onPress={() => navigation.navigate('SessionPlayer')}>
+                        <Card key={session.id} style={styles.sessionCard} onPress={() => handleStartSession(session)}>
                             <View style={styles.sessionInfo}>
                                 <View style={[styles.iconContainer, { backgroundColor: session.color }]}>
                                     <Zap size={20} color={theme.onSurface} />
@@ -95,7 +140,6 @@ export const HomeScreen = ({ navigation }: any) => {
                     ))}
                 </View>
 
-                {/* Progress Summary Placeholder */}
                 <Card variant="low" style={styles.progressCard}>
                     <Typography variant="headlineSm">Your Progress</Typography>
                     <Typography variant="bodyMd" style={{ marginTop: tokens.spacing.xs }}>
@@ -114,30 +158,13 @@ export const HomeScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-    },
-    container: {
-        paddingBottom: tokens.spacing.xxl,
-    },
-    header: {
-        padding: tokens.spacing.lg,
-        paddingTop: tokens.spacing.xxl,
-    },
-    greeting: {
-        opacity: 0.7,
-    },
-    section: {
-        paddingHorizontal: tokens.spacing.lg,
-        marginTop: tokens.spacing.xl,
-    },
-    sectionTitle: {
-        marginBottom: tokens.spacing.md,
-    },
-    quickActions: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
+    safeArea: { flex: 1 },
+    container: { paddingBottom: tokens.spacing.xxl },
+    header: { padding: tokens.spacing.lg, paddingTop: tokens.spacing.xxl },
+    greeting: { opacity: 0.7 },
+    section: { paddingHorizontal: tokens.spacing.lg, marginTop: tokens.spacing.xl },
+    sectionTitle: { marginBottom: tokens.spacing.md },
+    quickActions: { flexDirection: 'row', justifyContent: 'space-between' },
     quickActionCard: {
         flex: 1,
         marginHorizontal: tokens.spacing.xs,
@@ -146,17 +173,9 @@ const styles = StyleSheet.create({
         height: 100,
         justifyContent: 'center',
     },
-    quickActionLabel: {
-        marginTop: tokens.spacing.sm,
-        textAlign: 'center',
-    },
-    sessionCard: {
-        marginBottom: tokens.spacing.sm,
-    },
-    sessionInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
+    quickActionLabel: { marginTop: tokens.spacing.sm, textAlign: 'center' },
+    sessionCard: { marginBottom: tokens.spacing.sm },
+    sessionInfo: { flexDirection: 'row', alignItems: 'center' },
     iconContainer: {
         width: 40,
         height: 40,
@@ -165,11 +184,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: tokens.spacing.md,
     },
-    sessionText: {
-        flex: 1,
-    },
-    progressCard: {
-        margin: tokens.spacing.lg,
-        marginTop: tokens.spacing.xl,
-    },
+    sessionText: { flex: 1 },
+    progressCard: { margin: tokens.spacing.lg, marginTop: tokens.spacing.xl },
 });

@@ -1,153 +1,158 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, View, SafeAreaView, TouchableOpacity, Dimensions } from 'react-native';
-import { Play, Pause, SkipBack, SkipForward, X, Volume2, Moon } from 'lucide-react-native';
+import { Play, Pause, SkipBack, SkipForward, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useTheme } from '../theme/ThemeContext';
-import { tokens } from '../theme/tokens';
+import { useSessionStore } from '../store/sessionStore';
 import { Typography } from '../components/Typography';
-import { audioService } from '../services/AudioService';
+import { Card } from '../components/Card';
+import { tokens } from '../theme/tokens';
+import { useTheme } from '../theme/ThemeContext';
+import { sessionService } from '../services/sessionService';
 
 const { width } = Dimensions.get('window');
 
-const SAMPLE_AUDIO_URL = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-
-export const SessionPlayerScreen = ({ navigation, route }: any) => {
+export const SessionPlayerScreen = ({ navigation }: any) => {
     const { theme } = useTheme();
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [position, setPosition] = useState(0);
-    const [duration, setDuration] = useState(0);
+    const {
+        currentSession,
+        currentStepIndex,
+        progressSeconds,
+        updateProgress,
+        nextStep,
+        reset
+    } = useSessionStore();
+
+    const [isPlaying, setIsPlaying] = useState(true);
+    const saveInterval = useRef<NodeJS.Timeout | null>(null);
+
+    const currentStep = currentSession?.steps[currentStepIndex];
 
     useEffect(() => {
-        const initAudio = async () => {
-            const audioUrl = route.params?.session?.audioUrl || SAMPLE_AUDIO_URL;
-            await audioService.load(audioUrl, (status) => {
-                if (status.isLoaded) {
-                    setPosition(status.positionMillis);
-                    setDuration(status.durationMillis || 0);
-                    setIsPlaying(status.isPlaying);
-                }
-            });
-        };
-
-        initAudio();
+        // 5-second auto-save throttle
+        saveInterval.current = setInterval(() => {
+            if (currentSession && isPlaying) {
+                sessionService.saveProgress({
+                    sessionId: currentSession.id,
+                    currentStepIndex,
+                    progressSeconds: progressSeconds + 5,
+                });
+                updateProgress(progressSeconds + 5);
+            }
+        }, 5000);
 
         return () => {
-            audioService.unload();
+            if (saveInterval.current) clearInterval(saveInterval.current);
         };
-    }, []);
+    }, [currentSession, currentStepIndex, progressSeconds, isPlaying]);
 
-    const togglePlayback = async () => {
-        if (isPlaying) {
-            await audioService.pause();
-        } else {
-            await audioService.play();
-        }
-        setIsPlaying(!isPlaying);
+    const handleClose = () => {
+        reset();
+        navigation.goBack();
     };
 
-    const formatTime = (millis: number) => {
-        const minutes = Math.floor(millis / 60000);
-        const seconds = ((millis % 60000) / 1000).toFixed(0);
-        return `${minutes}:${Number(seconds) < 10 ? '0' : ''}${seconds}`;
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     };
 
-    const progress = duration > 0 ? position / duration : 0;
+    if (!currentSession || !currentStep) return null;
 
     return (
         <SafeAreaView style={styles.container}>
             <LinearGradient
-                colors={[theme.primary, theme.surface]}
+                colors={['#1A1D1E', '#0B0F11']}
                 style={StyleSheet.absoluteFill}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
             />
 
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
-                    <X color={theme.onSurface} size={28} />
+                <TouchableOpacity onPress={handleClose}>
+                    <X color="#FFFFFF" size={24} />
                 </TouchableOpacity>
+                <Typography variant="labelLg" color="#FFFFFF">
+                    {currentStepIndex + 1} of {currentSession.steps.length}
+                </Typography>
+                <View style={{ width: 24 }} />
             </View>
 
             <View style={styles.content}>
-                <View style={styles.artPlaceholder}>
+                <View style={styles.albumArt}>
                     <LinearGradient
-                        colors={[theme.primaryContainer, theme.secondaryContainer]}
+                        colors={[theme.primary, theme.secondary]}
                         style={styles.artGradient}
                     />
                 </View>
 
-                <View style={styles.info}>
-                    <Typography variant="displaySm" color={theme.onSurface} style={styles.title}>
-                        {route.params?.session?.title || 'Guided Session'}
-                    </Typography>
-                    <Typography variant="bodyLg" color={theme.onSurfaceVariant}>
-                        {route.params?.program?.title || 'Meditation'} • {route.params?.session?.duration / 60 || 10} min
-                    </Typography>
-                </View>
+                <Typography variant="displaySm" color="#FFFFFF" style={styles.title}>
+                    {currentStep.title}
+                </Typography>
+                <Typography variant="bodyMd" color="rgba(255,255,255,0.6)">
+                    {currentSession.title}
+                </Typography>
 
-                <View style={styles.progressContainer}>
-                    <View style={[styles.progressBar, { backgroundColor: theme.surfaceContainerHigh }]}>
+                <View style={styles.progressSection}>
+                    <View style={styles.progressBarBg}>
                         <View
                             style={[
-                                styles.progressFill,
+                                styles.progressBarFill,
                                 {
-                                    width: `${progress * 100}%`,
+                                    width: `${(progressSeconds / currentStep.duration) * 100}%`,
                                     backgroundColor: theme.primary
                                 }
                             ]}
                         />
                     </View>
-                    <View style={styles.timeContainer}>
-                        <Typography variant="labelSm" color={theme.onSurfaceVariant}>
-                            {formatTime(position)}
+                    <View style={styles.timeRow}>
+                        <Typography variant="labelSm" color="rgba(255,255,255,0.6)">
+                            {formatTime(progressSeconds)}
                         </Typography>
-                        <Typography variant="labelSm" color={theme.onSurfaceVariant}>
-                            {formatTime(duration)}
+                        <Typography variant="labelSm" color="rgba(255,255,255,0.6)">
+                            {formatTime(currentStep.duration)}
                         </Typography>
                     </View>
                 </View>
 
                 <View style={styles.controls}>
-                    <TouchableOpacity
-                        style={styles.controlButton}
-                        onPress={() => audioService.seekRelative(-15000)}
-                    >
-                        <SkipBack size={32} color={theme.onSurface} />
+                    <TouchableOpacity style={styles.controlButton}>
+                        <SkipBack color="#FFFFFF" size={32} />
                     </TouchableOpacity>
+
                     <TouchableOpacity
                         style={[styles.playButton, { backgroundColor: theme.primary }]}
-                        onPress={togglePlayback}
+                        onPress={() => setIsPlaying(!isPlaying)}
                     >
                         {isPlaying ? (
-                            <Pause size={32} color={theme.onPrimary} />
+                            <Pause color="#000000" size={32} fill="#000000" />
                         ) : (
-                            <Play size={32} color={theme.onPrimary} fill={theme.onPrimary} />
+                            <Play color="#000000" size={32} fill="#000000" />
                         )}
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.controlButton}
-                        onPress={() => audioService.seekRelative(15000)}
-                    >
-                        <SkipForward size={32} color={theme.onSurface} />
+
+                    <TouchableOpacity style={styles.controlButton} onPress={nextStep}>
+                        <SkipForward color="#FFFFFF" size={32} />
                     </TouchableOpacity>
                 </View>
 
-                <View style={styles.footer}>
-                    <TouchableOpacity style={styles.footerAction}>
-                        <Volume2 color={theme.onSurfaceVariant} size={24} />
-                        <Typography variant="labelMd" color={theme.onSurfaceVariant} style={styles.footerLabel}>
-                            Volume
-                        </Typography>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.footerAction}
-                        onPress={() => navigation.navigate('SleepMode')}
-                    >
-                        <Moon color={theme.onSurfaceVariant} size={24} />
-                        <Typography variant="labelMd" color={theme.onSurfaceVariant} style={styles.footerLabel}>
-                            Sleep Mode
-                        </Typography>
-                    </TouchableOpacity>
+                <View style={styles.stepsList}>
+                    {currentSession.steps.map((step, index) => (
+                        <View key={step.id} style={styles.stepIndicator}>
+                            <View
+                                style={[
+                                    styles.dot,
+                                    index === currentStepIndex ? { backgroundColor: theme.primary } :
+                                        index < currentStepIndex ? { backgroundColor: 'rgba(255,255,255,0.8)' } :
+                                            { backgroundColor: 'rgba(255,255,255,0.2)' }
+                                ]}
+                            />
+                            <Typography
+                                variant="labelSm"
+                                color={index === currentStepIndex ? "#FFFFFF" : "rgba(255,255,255,0.4)"}
+                                style={{ marginLeft: 8 }}
+                            >
+                                {step.title}
+                            </Typography>
+                        </View>
+                    ))}
                 </View>
             </View>
         </SafeAreaView>
@@ -155,20 +160,12 @@ export const SessionPlayerScreen = ({ navigation, route }: any) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
+    container: { flex: 1 },
     header: {
-        padding: tokens.spacing.lg,
-        alignItems: 'flex-end',
-    },
-    closeButton: {
-        width: 48,
-        height: 48,
-        borderRadius: tokens.roundness.full,
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        justifyContent: 'center',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
+        padding: tokens.spacing.lg,
     },
     content: {
         flex: 1,
@@ -176,45 +173,38 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingHorizontal: tokens.spacing.xl,
     },
-    artPlaceholder: {
+    albumArt: {
         width: width * 0.7,
         height: width * 0.7,
-        borderRadius: tokens.roundness.xl,
+        borderRadius: 24,
         overflow: 'hidden',
         marginBottom: tokens.spacing.xxl,
-        elevation: 10,
+        elevation: 8,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
     },
-    artGradient: {
-        flex: 1,
-    },
-    info: {
-        alignItems: 'center',
-        marginBottom: tokens.spacing.xxl,
-    },
-    title: {
-        textAlign: 'center',
-        marginBottom: tokens.spacing.sm,
-    },
-    progressContainer: {
+    artGradient: { flex: 1 },
+    title: { marginBottom: tokens.spacing.xs, textAlign: 'center' },
+    progressSection: {
         width: '100%',
+        marginTop: tokens.spacing.xxl,
         marginBottom: tokens.spacing.xl,
     },
-    progressBar: {
-        height: 6,
-        borderRadius: 3,
-        marginBottom: tokens.spacing.sm,
+    progressBarBg: {
+        height: 4,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 2,
         overflow: 'hidden',
     },
-    progressFill: {
+    progressBarFill: {
         height: '100%',
     },
-    timeContainer: {
+    timeRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginTop: tokens.spacing.sm,
     },
     controls: {
         flexDirection: 'row',
@@ -234,16 +224,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginHorizontal: tokens.spacing.xl,
     },
-    footer: {
-        flexDirection: 'row',
+    stepsList: {
         width: '100%',
-        justifyContent: 'space-around',
         marginTop: tokens.spacing.xl,
     },
-    footerAction: {
+    stepIndicator: {
+        flexDirection: 'row',
         alignItems: 'center',
+        marginBottom: tokens.spacing.sm,
     },
-    footerLabel: {
-        marginTop: tokens.spacing.xs,
+    dot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
     },
 });

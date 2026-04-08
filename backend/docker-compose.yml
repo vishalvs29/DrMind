@@ -6,8 +6,8 @@ services:
     container_name: drmindit_db
     restart: always
     environment:
-      POSTGRES_USER: drmindit_user
-      POSTGRES_PASSWORD: drmindit_password
+      POSTGRES_USER: drmindit_secure_admin
+      POSTGRES_PASSWORD: secure_stable_password_2026_!@#
       POSTGRES_DB: drmindit
     ports:
       - '5432:5432'

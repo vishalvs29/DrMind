@@ -34,7 +34,7 @@ model User {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   moodLogs        MoodLog[]
-  userProgress    UserProgress[]
+  userProgress    UserSessionProgress[]
   crisisEvents    CrisisEvent[]
   riskScores      RiskScore[]
   emergencyContact EmergencyContact?
@@ -54,11 +54,20 @@ model Session {
   id          String         @id @default(uuid())
   title       String
   description String?
-  audioUrl    String
-  duration    Int           // in seconds
+  steps       SessionStep[]
   programId   String?
   program     Program?       @relation(fields: [programId], references: [id])
-  progress    UserProgress[]
+  progress    UserSessionProgress[]
+}
+
+model SessionStep {
+  id        String   @id @default(uuid())
+  title     String
+  audioUrl  String
+  duration  Int      // in seconds
+  order     Int
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id])
 }
 
 model Program {
@@ -69,15 +78,17 @@ model Program {
   sessions    Session[]
 }
 
-model UserProgress {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id])
-  sessionId    String
-  session      Session  @relation(fields: [sessionId], references: [id])
-  completed    Boolean  @default(false)
-  progressSec  Int      @default(0)
-  lastAccessed DateTime @default(now())
+model UserSessionProgress {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id])
+  sessionId         String
+  session           Session   @relation(fields: [sessionId], references: [id])
+  currentStepIndex  Int       @default(0)
+  progressSeconds   Int       @default(0)
+  completedSteps    String[]
+  isCompleted       Boolean   @default(false)
+  lastUpdated       DateTime  @updatedAt
 
   @@unique([userId, sessionId])
 }
