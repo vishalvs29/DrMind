@@ -7,29 +7,55 @@ import {
     TextInput,
     TouchableOpacity,
     KeyboardAvoidingView,
-    Platform
+    Platform,
+    Alert
 } from 'react-native';
-import { Send, ShieldAlert, Heart } from 'lucide-react-native';
+import { Send, ShieldAlert, Heart, Play } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { Card } from '../components/Card';
 import { Typography } from '../components/Typography';
 import { CrisisResponseModal } from '../components/CrisisResponseModal';
-import { processChatMessage, getLocalHelplines, Message, RiskLevel } from '../services/CrisisService';
+import { processChatMessage, getLocalHelplines, Message, ChatResponse } from '../services/CrisisService';
+import { AudioService } from '../services/AudioService';
 
 export const ChatScreen = () => {
     const { theme } = useTheme();
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
-            text: "Hello! I'm DrMindit, your empathetic mental health companion. How are you feeling today?",
+            text: "Hello! I'm DrMindit. I'm here to listen and support you through any emotions you're feeling.",
             sender: 'ai',
             timestamp: new Date(),
         }
     ]);
     const [inputText, setInputText] = useState('');
     const [isCrisisModalVisible, setCrisisModalVisible] = useState(false);
-    const [currentRisk, setCurrentRisk] = useState<RiskLevel>('LOW');
+    const [currentResponse, setCurrentResponse] = useState<ChatResponse | null>(null);
     const flatListRef = useRef<FlatList>(null);
+
+    const handleAction = async (response: ChatResponse) => {
+        switch (response.action) {
+            case 'start_session':
+                if (response.audio) {
+                    await AudioService.play(response.audio);
+                }
+                break;
+            case 'force_crisis_ui':
+                setCrisisModalVisible(true);
+                if (response.audio) {
+                    await AudioService.play(response.audio);
+                }
+                break;
+            case 'show_helpline':
+                setCrisisModalVisible(true);
+                break;
+            case 'suggest_session':
+                // UI already shows suggestion in message text
+                break;
+            default:
+                break;
+        }
+    };
 
     const handleSend = async () => {
         if (!inputText.trim()) return;
@@ -44,25 +70,23 @@ export const ChatScreen = () => {
         setMessages(prev => [...prev, userMessage]);
         setInputText('');
 
-        const { response, risk, emotion } = await processChatMessage(userMessage.text);
-        setCurrentRisk(risk);
-
-        if (risk === 'HIGH' || risk === 'CRITICAL') {
-            setCrisisModalVisible(true);
-        }
+        const aiResponse = await processChatMessage(userMessage.text);
+        setCurrentResponse(aiResponse);
 
         const aiMessage: Message = {
             id: (Date.now() + 1).toString(),
-            text: response,
+            text: aiResponse.message,
             sender: 'ai',
             timestamp: new Date(),
-            isCrisis: risk !== 'LOW',
-            emotion: emotion
+            emotion: aiResponse.emotion,
+            action: aiResponse.action,
+            audio: aiResponse.audio
         };
 
-        setTimeout(() => {
+        setTimeout(async () => {
             setMessages(prev => [...prev, aiMessage]);
-        }, 800);
+            await handleAction(aiResponse);
+        }, 600);
     };
 
     useEffect(() => {
@@ -77,12 +101,9 @@ export const ChatScreen = () => {
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
             <View style={[styles.header, { borderBottomColor: theme.border }]}>
                 <View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Typography variant="h2">Empathetic Support</Typography>
-                        <View style={[styles.activeIndicator, { backgroundColor: '#10B981' }]} />
-                    </View>
+                    <Typography variant="h2">Emotional Intelligence</Typography>
                     <Typography variant="caption" style={{ color: theme.textSecondary }}>
-                        Deep Context Understanding Active
+                        Action-Aware Session Support
                     </Typography>
                 </View>
                 <TouchableOpacity
@@ -115,16 +136,27 @@ export const ChatScreen = () => {
                             variant={item.sender === 'user' ? 'high' : 'lowest'}
                             style={[
                                 styles.messageCard,
-                                item.sender === 'user' ? styles.userCard : styles.aiCard,
-                                item.isCrisis && { borderColor: '#EF4444', borderWidth: 1.5 }
+                                item.sender === 'user' ? styles.userCard : styles.aiCard
                             ]}
                         >
                             <Typography
                                 variant="body"
-                                style={{ color: item.sender === 'user' ? '#FFF' : theme.text, lineHeight: 22 }}
+                                style={{ color: item.sender === 'user' ? '#FFF' : theme.text }}
                             >
                                 {item.text}
                             </Typography>
+
+                            {item.action === 'suggest_session' && (
+                                <TouchableOpacity
+                                    style={styles.actionButton}
+                                    onPress={() => item.audio && AudioService.play(item.audio)}
+                                >
+                                    <Play size={14} color="#6366F1" style={{ marginRight: 6 }} />
+                                    <Typography variant="caption" style={{ color: '#6366F1', fontWeight: '700' }}>
+                                        Start Guided Session
+                                    </Typography>
+                                </TouchableOpacity>
+                            )}
                         </Card>
                     </View>
                 )}
@@ -137,7 +169,7 @@ export const ChatScreen = () => {
                 <View style={[styles.inputArea, { borderTopColor: theme.border }]}>
                     <TextInput
                         style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
-                        placeholder="How are you feeling deep down?"
+                        placeholder="Help me understand your feelings..."
                         placeholderTextColor={theme.textSecondary}
                         value={inputText}
                         onChangeText={setInputText}
@@ -156,7 +188,7 @@ export const ChatScreen = () => {
                 visible={isCrisisModalVisible}
                 onClose={() => setCrisisModalVisible(false)}
                 helplines={helplines}
-                riskLevel={currentRisk === 'CRITICAL' ? 'CRITICAL' : 'HIGH'}
+                riskLevel={currentResponse?.emotion === 'HOPELESSNESS' ? 'CRITICAL' : 'HIGH'}
             />
         </SafeAreaView>
     );
@@ -171,7 +203,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderBottomWidth: 1
     },
-    activeIndicator: { width: 6, height: 6, borderRadius: 3, marginLeft: 8 },
     sosCircle: {
         width: 44,
         height: 44,
@@ -197,6 +228,15 @@ const styles = StyleSheet.create({
     messageCard: { padding: 16, borderRadius: 20 },
     userCard: { backgroundColor: '#6366F1' },
     aiCard: { backgroundColor: '#F3F4F6' },
+    actionButton: {
+        marginTop: 12,
+        backgroundColor: '#FFF',
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderRadius: 12,
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
     inputArea: {
         padding: 16,
         flexDirection: 'row',
@@ -218,11 +258,7 @@ const styles = StyleSheet.create({
         height: 52,
         borderRadius: 26,
         alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#6366F1',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 6,
-        elevation: 4
+        justifyContent: 'center'
     }
 });
+village

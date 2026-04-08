@@ -2,55 +2,15 @@ import helplinesData from '../data/helplines.json';
 
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type EmotionType = 'ANXIETY' | 'STRESS' | 'SADNESS' | 'ANGER' | 'LONELINESS' | 'HOPELESSNESS' | 'NEUTRAL';
+export type ActionType = 'none' | 'suggest_session' | 'start_session' | 'show_helpline' | 'force_crisis_ui';
 
-const RISK_PATTERNS = {
-    CRITICAL: [
-        'kill myself', 'suicide', 'end my life', 'better off dead',
-        'hurt myself', 'taking my own life'
-    ],
-    HIGH: [
-        'want to disappear', 'no reason to live', 'end everything',
-        'hate my life', 'give up'
-    ]
-};
-
-const EMOTION_PATTERNS: Record<EmotionType, string[]> = {
-    ANXIETY: ['anxious', 'panic', 'scared', 'worry', 'breathless', 'nervous'],
-    STRESS: ['stress', 'overwhelmed', 'too much', 'exhausted', 'burnout'],
-    SADNESS: ['sad', 'crying', 'unhappy', 'miss', 'hurt', 'pain', 'miserable'],
-    ANGER: ['angry', 'mad', 'hate', 'furious', 'annoyed', 'frustrated'],
-    LONELINESS: ['lonely', 'alone', 'no one', 'isolated', 'ignored'],
-    HOPELESSNESS: ['hopeless', 'pointless', 'no future', 'disappear', 'give up'],
-    NEUTRAL: []
-};
-
-export const analyzeLocalEmotion = (text: string): { emotion: EmotionType; intensity: number } => {
-    const lowerText = text.toLowerCase();
-    let detectedEmotion: EmotionType = 'NEUTRAL';
-    let maxMatches = 0;
-
-    for (const [emotion, patterns] of Object.entries(EMOTION_PATTERNS)) {
-        const matchCount = patterns.filter(p => lowerText.includes(p)).length;
-        if (matchCount > maxMatches) {
-            maxMatches = matchCount;
-            detectedEmotion = emotion as EmotionType;
-        }
-    }
-
-    let intensity = Math.min(0.2 + (maxMatches * 0.2), 1.0);
-    if (lowerText.includes('very') || lowerText.includes('really') || lowerText.includes('!')) {
-        intensity = Math.min(intensity + 0.2, 1.0);
-    }
-
-    return { emotion: detectedEmotion, intensity };
-};
-
-export const detectLocalRisk = (text: string): RiskLevel => {
-    const lowerText = text.toLowerCase();
-    if (RISK_PATTERNS.CRITICAL.some(p => lowerText.includes(p))) return 'CRITICAL';
-    if (RISK_PATTERNS.HIGH.some(p => lowerText.includes(p))) return 'HIGH';
-    return 'LOW';
-};
+export interface ChatResponse {
+    message: string;
+    action: ActionType;
+    audio: string | null;
+    emotion: EmotionType;
+    intensity: number;
+}
 
 export const getLocalHelplines = (countryCode: string = 'US') => {
     const data = helplinesData as any;
@@ -64,39 +24,41 @@ export interface Message {
     timestamp: Date;
     isCrisis?: boolean;
     emotion?: EmotionType;
+    action?: ActionType;
+    audio?: string | null;
 }
 
-export const processChatMessage = async (text: string): Promise<{ response: string; risk: RiskLevel; emotion: EmotionType }> => {
-    const risk = detectLocalRisk(text);
-    const { emotion, intensity } = analyzeLocalEmotion(text);
+// In production, this would call the backend /chat/message endpoint
+export const processChatMessage = async (text: string): Promise<ChatResponse> => {
+    // Simulating backend logic for offline resilience or demo purposes
+    const lowerText = text.toLowerCase();
 
-    if (risk === 'CRITICAL' || risk === 'HIGH') {
+    if (lowerText.includes('die') || lowerText.includes('suicide') || lowerText.includes('end it')) {
         return {
-            response: "I'm very concerned about what you're saying. Please know that help is available and you don't have to carry this alone.",
-            risk,
-            emotion: 'HOPELESSNESS'
+            message: "I am deeply concerned about your safety. I am sharing local resources that can help you right now. You are not alone.",
+            action: 'force_crisis_ui',
+            audio: "https://drmindit.com/assets/audio/emergency_calm.mp3",
+            emotion: 'HOPELESSNESS',
+            intensity: 0.95
         };
     }
 
-    if (emotion === 'ANXIETY' || emotion === 'STRESS') {
+    if (lowerText.includes('anxious') || lowerText.includes('panic')) {
         return {
-            response: "It sounds like you're feeling a bit overwhelmed. Would you like to try a quick breathing session together?",
-            risk: 'LOW',
-            emotion
-        };
-    }
-
-    if (emotion === 'SADNESS') {
-        return {
-            response: "I'm really sorry things are feeling so heavy right now. What's been weighng on you the most?",
-            risk: 'LOW',
-            emotion
+            message: "I\u0027m hearing a lot of anxiety right now. Let\u0027s take a moment for a box breathing session together.",
+            action: 'start_session',
+            audio: "https://drmindit.com/assets/audio/box_breathing.mp3",
+            emotion: 'ANXIETY',
+            intensity: 0.6
         };
     }
 
     return {
-        response: "I'm listening. Thank you for sharing that with me. What else is on your mind?",
-        risk: 'LOW',
-        emotion: 'NEUTRAL'
+        message: "I'm listening. Thank you for sharing that with me. What else is on your mind?",
+        action: 'none',
+        audio: null,
+        emotion: 'NEUTRAL',
+        intensity: 0.1
     };
 };
+village

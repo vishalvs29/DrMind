@@ -1,0 +1,72 @@
+{
+    "ANXIETY": {
+        "low": [
+            {
+                "text": "It sounds like you\u0027re feeling a bit unsettled. Want to try a short grounding exercise?",
+                "audio_tag": "grounding_light",
+                "action": "SUGGEST_SESSION"
+            },
+            {
+                "text": "I can hear the worry in your words. I\u0027m here to listen. What\u0027s on your mind top-most?",
+                "audio_tag": null,
+                "action": "NONE"
+            }
+        ],
+        "medium": [
+            {
+                "text": "I\u0027m hearing a lot of anxiety right now. Let\u0027s take a moment for a box breathing session together.",
+                "audio_tag": "box_breathing",
+                "action": "START_SESSION"
+            }
+        ],
+        "high": [
+            {
+                "text": "It sounds like you\u0027re in a lot of distress. Please breathe with me, and consider reaching out to a professional if it feels too heavy.",
+                "audio_tag": "rapid_calm",
+                "action": "SHOW_HELPLINE"
+            }
+        ]
+    },
+    "SADNESS": {
+        "low": [
+            {
+                "text": "I\u0027m sorry you\u0027re feeling down. I\u0027m here for you. Want to talk more about it?",
+                "audio_tag": null,
+                "action": "NONE"
+            }
+        ],
+        "medium": [
+            {
+                "text": "Things seem really heavy today. Sometimes a guided reflection can help sit with these feelings. Should we try one?",
+                "audio_tag": "gentle_reflection",
+                "action": "SUGGEST_SESSION"
+            }
+        ],
+        "high": [
+            {
+                "text": "I\u0027m concerned about how much you\u0027re hurting. You don\u0027t have to carry this alone.",
+                "audio_tag": null,
+                "action": "SHOW_HELPLINE"
+            }
+        ]
+    },
+    "CRISIS": {
+        "high": [
+            {
+                "text": "I am deeply concerned about your safety. I am sharing local resources that can help you right now. You are not alone.",
+                "audio_tag": "emergency_calm",
+                "action": "FORCE_CRISIS_UI"
+            }
+        ]
+    },
+    "NEUTRAL": {
+        "low": [
+            {
+                "text": "I\u0027m here to listen. How else can I support you today?",
+                "audio_tag": null,
+                "action": "NONE"
+            }
+        ]
+    }
+}
+ village
