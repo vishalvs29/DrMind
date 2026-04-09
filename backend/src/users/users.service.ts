@@ -28,4 +28,12 @@ export class UsersService {
             where: { id },
         });
     }
+
+    async updatePassword(id: string, hashedPassword: string): Promise<void> {
+        await this.prisma.user.update({
+            where: { id },
+            data: { password: hashedPassword },
+        });
+    }
 }
+

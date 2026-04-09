@@ -160,4 +160,3 @@ const styles = StyleSheet.create({
     insightBody: { marginTop: 4 },
     footerNote: { textAlign: 'center', marginTop: tokens.spacing.xl, fontStyle: 'italic' },
 });
-village

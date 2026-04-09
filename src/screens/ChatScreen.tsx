@@ -35,7 +35,8 @@ export const ChatScreen = () => {
     const flatListRef = useRef<FlatList>(null);
 
     const handleAction = async (response: ChatResponse) => {
-        switch (response.action) {
+        const action = response.action?.toUpperCase();
+        switch (action) {
             case 'START_SESSION':
                 if (response.audio) {
                     await audioService.play();

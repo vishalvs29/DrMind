@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ChatController } from './chat.controller';
 import { ConversationService } from './conversation.service';
 import { JwtService } from '@nestjs/jwt';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 describe('ChatController', () => {
   let controller: ChatController;
@@ -13,7 +14,10 @@ describe('ChatController', () => {
         { provide: ConversationService, useValue: {} },
         { provide: JwtService, useValue: {} },
       ],
-    }).compile();
+    })
+      .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: jest.fn(() => true) })
+      .compile();
 
     controller = module.get<ChatController>(ChatController);
   });

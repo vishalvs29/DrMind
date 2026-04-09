@@ -1,18 +1,18 @@
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TokenService } from './TokenService';
 
 const API_URL = 'http://localhost:3000'; // Should be config based
 
 export const analyticsService = {
     async getMoodHistory() {
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await TokenService.getToken();
         return axios.get(`${API_URL}/mood/history`, {
             headers: { Authorization: `Bearer ${token}` }
         });
     },
 
     async getInsights() {
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await TokenService.getToken();
         return axios.get(`${API_URL}/analytics/insights`, {
             headers: { Authorization: `Bearer ${token}` }
         });

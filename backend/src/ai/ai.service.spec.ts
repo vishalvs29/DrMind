@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AiService } from './ai.service';
-import { EmotionService } from './emotion.service';
+import { EmotionAnalyzerService } from './emotion-analyzer.service';
 
 describe('AiService', () => {
   let service: AiService;
@@ -9,7 +9,7 @@ describe('AiService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AiService,
-        { provide: EmotionService, useValue: {} },
+        { provide: EmotionAnalyzerService, useValue: {} },
       ],
     }).compile();
 

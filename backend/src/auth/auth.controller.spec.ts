@@ -4,6 +4,11 @@ import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 
+jest.mock('@prisma/client', () => ({
+  ...jest.requireActual('@prisma/client'),
+  Role: { STUDENT: 'STUDENT', PROFESSIONAL: 'PROFESSIONAL', MILITARY: 'MILITARY', POLICE: 'POLICE' },
+}));
+
 describe('AuthController', () => {
   let controller: AuthController;
 

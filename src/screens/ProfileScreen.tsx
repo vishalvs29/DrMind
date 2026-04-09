@@ -5,9 +5,11 @@ import { useTheme } from '../theme/ThemeContext';
 import { tokens } from '../theme/tokens';
 import { Typography } from '../components/Typography';
 import { Card } from '../components/Card';
+import { useProfile } from '../hooks/useProfile';
 
 export const ProfileScreen = ({ navigation }: any) => {
     const { theme, isDark, toggleTheme } = useTheme();
+    const { profile } = useProfile();
 
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
@@ -16,8 +18,8 @@ export const ProfileScreen = ({ navigation }: any) => {
                     <View style={[styles.avatar, { backgroundColor: theme.primaryContainer }]}>
                         <User size={40} color={theme.onPrimaryContainer} />
                     </View>
-                    <Typography variant="displaySm" style={styles.userName}>Alex Johnson</Typography>
-                    <Typography variant="bodyMd" color={theme.onSurfaceVariant}>Premium Member</Typography>
+                    <Typography variant="displaySm" style={styles.userName}>{profile?.name || 'Alex Johnson'}</Typography>
+                    <Typography variant="bodyMd" color={theme.onSurfaceVariant}>{profile?.role || 'Premium Member'}</Typography>
                 </View>
 
                 {/* Stats */}

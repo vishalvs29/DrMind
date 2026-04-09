@@ -13,6 +13,7 @@ import { JwtStrategy } from './jwt.strategy';
     PassportModule,
     ConfigModule,
     JwtModule.registerAsync({
+
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),

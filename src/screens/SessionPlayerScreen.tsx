@@ -17,6 +17,7 @@ export const SessionPlayerScreen = ({ navigation }: any) => {
         currentSession,
         currentStepIndex,
         progressSeconds,
+        isCompleted,
         updateProgress,
         nextStep,
         reset
@@ -24,13 +25,25 @@ export const SessionPlayerScreen = ({ navigation }: any) => {
 
     const [isPlaying, setIsPlaying] = useState(true);
     const saveInterval = useRef<NodeJS.Timeout | null>(null);
+    const completionFired = useRef(false);
 
     const currentStep = currentSession?.steps[currentStepIndex];
 
+    // Explicit completion callback — fires when the store marks the session done.
+    // Guarded by a ref to avoid duplicate API calls if the store already called it via nextStep().
     useEffect(() => {
-        // 5-second auto-save throttle
+        if (isCompleted && currentSession && !completionFired.current) {
+            completionFired.current = true;
+            sessionService.completeSession(currentSession.id).catch((err) =>
+                console.warn('completeSession screen callback failed:', err)
+            );
+        }
+    }, [isCompleted, currentSession]);
+
+    useEffect(() => {
+        // 5-second auto-save throttle — stops once the session is complete.
         saveInterval.current = setInterval(() => {
-            if (currentSession && isPlaying) {
+            if (currentSession && isPlaying && !isCompleted) {
                 sessionService.saveProgress({
                     sessionId: currentSession.id,
                     currentStepIndex,
@@ -43,7 +56,7 @@ export const SessionPlayerScreen = ({ navigation }: any) => {
         return () => {
             if (saveInterval.current) clearInterval(saveInterval.current);
         };
-    }, [currentSession, currentStepIndex, progressSeconds, isPlaying]);
+    }, [currentSession, currentStepIndex, progressSeconds, isPlaying, isCompleted]);
 
     const handleClose = () => {
         reset();

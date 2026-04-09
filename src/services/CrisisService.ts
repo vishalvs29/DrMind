@@ -1,3 +1,4 @@
+import { TokenService } from './TokenService';
 import helplinesData from '../data/helplines.json';
 
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
@@ -31,7 +32,7 @@ export interface Message {
 // In production, this would call the backend /chat/message endpoint
 export const processChatMessage = async (text: string): Promise<ChatResponse> => {
     try {
-        const token = localStorage.getItem('token'); // Simplistic for demo, in real app use a secure storage
+        const token = await TokenService.getToken();
         const response = await fetch(`${process.env.API_URL || 'http://localhost:3000'}/chat/message`, {
             method: 'POST',
             headers: {

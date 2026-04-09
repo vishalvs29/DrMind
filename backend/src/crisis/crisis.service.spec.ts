@@ -2,6 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CrisisService } from './crisis.service';
 import { PrismaMockProvider } from '../../test/mocks';
 
+jest.mock('@prisma/client', () => ({
+  ...jest.requireActual('@prisma/client'),
+  RiskLevel: { LOW: 'LOW', MEDIUM: 'MEDIUM', HIGH: 'HIGH', CRITICAL: 'CRITICAL' },
+}));
+
 describe('CrisisService', () => {
   let service: CrisisService;
 

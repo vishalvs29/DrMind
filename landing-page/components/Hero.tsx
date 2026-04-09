@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Download } from 'lucide-react';
 import Image from 'next/image';
@@ -5,6 +6,16 @@ import Image from 'next/image';
 const HERO_IMAGE = '/drmindit_app_mockup_hero_1775565857971.png';
 
 export const Hero = () => {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) {
+        return <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 min-h-[600px]" />;
+    }
+
     return (
         <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
             {/* Background Orbs */}

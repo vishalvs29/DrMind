@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, ScrollView, View, SafeAreaView, Alert } from 'react-native';
-import { Play, MessageCircle, Moon, Zap } from 'lucide-react-native';
+import { Play, MessageCircle, Moon, Zap, PlayCircle } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { tokens } from '../theme/tokens';
 import { Typography } from '../components/Typography';
@@ -9,6 +9,7 @@ import { MoodCheckIn } from '../components/MoodCheckIn';
 import { Button } from '../components/Button';
 import { sessionService } from '../services/sessionService';
 import { useSessionStore } from '../store/sessionStore';
+import { useProfile } from '../hooks/useProfile';
 
 const RECOMMENDED_SESSIONS = [
     {
@@ -29,6 +30,7 @@ const RECOMMENDED_SESSIONS = [
 export const HomeScreen = ({ navigation }: any) => {
     const { theme } = useTheme();
     const { startSession } = useSessionStore();
+    const { profile } = useProfile();
 
     useEffect(() => {
         const checkResume = async () => {
@@ -71,7 +73,7 @@ export const HomeScreen = ({ navigation }: any) => {
                         Good Afternoon,
                     </Typography>
                     <Typography variant="displayMd" color={theme.primary}>
-                        DrMindit User
+                        {profile?.name || 'DrMindit User'}
                     </Typography>
                 </View>
 
@@ -126,7 +128,7 @@ export const HomeScreen = ({ navigation }: any) => {
                         <Card key={session.id} style={styles.sessionCard} onPress={() => handleStartSession(session)}>
                             <View style={styles.sessionInfo}>
                                 <View style={[styles.iconContainer, { backgroundColor: session.color }]}>
-                                    <Zap size={20} color={theme.onSurface} />
+                                    <PlayCircle size={20} color={theme.onSurface} />
                                 </View>
                                 <View style={styles.sessionText}>
                                     <Typography variant="headlineSm">{session.title}</Typography>
