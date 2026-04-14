@@ -32,8 +32,8 @@ export class ConversationService {
             data: { userId, message: response.text, sender: 'ai' }
         });
 
-        // Crisis logging
-        if (response.action === 'force_crisis_ui' || (analysis.emotion === 'HOPELESSNESS' && analysis.intensity > 0.7)) {
+        // Crisis logging — case-insensitive to handle both 'FORCE_CRISIS_UI' (responses.json) and legacy lowercase.
+        if (response.action?.toUpperCase() === 'FORCE_CRISIS_UI' || (analysis.emotion === 'HOPELESSNESS' && analysis.intensity > 0.7)) {
             await this.prisma.crisisEvent.create({
                 data: {
                     userId,
@@ -46,7 +46,7 @@ export class ConversationService {
 
         return {
             message: response.text,
-            action: response.action,
+            action: response.action?.toUpperCase() ?? 'NONE',
             audio: audioUrl,
             emotion: analysis.emotion,
             intensity: analysis.intensity,

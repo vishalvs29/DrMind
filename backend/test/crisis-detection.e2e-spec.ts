@@ -42,9 +42,10 @@ describe('Crisis Detection (e2e)', () => {
             .useValue({
                 getResponse: (emotion: string) => {
                     if (emotion === 'CRISIS' || emotion === 'HOPELESSNESS') {
-                        return { action: 'force_crisis_ui', text: 'Mocked crisis response' };
+                        // Use uppercase to match responses.json — previously lowercase was masking the production casing bug.
+                        return { action: 'FORCE_CRISIS_UI', text: 'Mocked crisis response' };
                     }
-                    return { action: 'none', text: 'Mocked response' };
+                    return { action: 'NONE', text: 'Mocked response' };
                 }
             })
             .overrideProvider('BullQueue_risk-detection')
@@ -74,7 +75,7 @@ describe('Crisis Detection (e2e)', () => {
             .send({ text: 'I want to kill myself' })
             .expect(201)
             .expect((res) => {
-                expect(res.body.action).toBe('force_crisis_ui');
+                expect(res.body.action).toBe('FORCE_CRISIS_UI');
             });
     });
 
@@ -85,7 +86,7 @@ describe('Crisis Detection (e2e)', () => {
             .send({ text: 'HELP ME I WANT TO KILL MYSELF' })
             .expect(201)
             .expect((res) => {
-                expect(res.body.action).toBe('force_crisis_ui');
+                expect(res.body.action).toBe('FORCE_CRISIS_UI');
             });
     });
 
